@@ -36,14 +36,14 @@ using namespace std::chrono;
 
 std::list<ColliderObject*> colliders;
 
-void initScene(int boxCount, int sphereCount) {
-    for (int i = 0; i < boxCount; ++i) {
+void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
+    auto start = steady_clock::now();
+    for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
         Box* box = new Box();
 
         // Assign random x, y, and z positions within specified ranges
-        box->position.x = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 20.0f));
-        box->position.y = 10.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 1.0f));
-        box->position.z = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 20.0f));
+        float pos = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 20.0f));
+        box->position = { pos, 10.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 1.0f)), pos };
 
         box->size = {1.0f, 1.0f, 1.0f};
 
@@ -52,14 +52,13 @@ void initScene(int boxCount, int sphereCount) {
         box->velocity = {randomXVelocity, 0.0f, 0.0f};
 
         // Assign a random color to the box
-        box->colour.x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        box->colour.y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        box->colour.z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float colour = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        box->colour = { colour, colour, colour };
 
-        colliders.push_back(box);
+        colliders.emplace_back(box);
     }
 
-    for (int i = 0; i < sphereCount; ++i) {
+    for (int i = sphereCount; i--;) {
         Sphere* sphere = new Sphere;
 
         // Assign random x, y, and z positions within specified ranges
@@ -78,8 +77,11 @@ void initScene(int boxCount, int sphereCount) {
         sphere->colour.y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         sphere->colour.z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
-        colliders.push_back(sphere);
+        colliders.emplace_back(sphere);
     }
+    auto end = steady_clock::now();
+    auto total = end - start;
+    std::cout << "Init time: " << total.count() << std::endl;
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
@@ -277,15 +279,32 @@ void mouse(int button, int state, int x, int y) {
 void keyboard(unsigned char key, int x, int y) {
     const float impulseMagnitude = 20.0f; // Upward impulse magnitude
 
-    if (key == ' ') { // Spacebar key
+    switch (key)
+    {
+    case ' ': //space bar
         for (ColliderObject* box : colliders) {
             box->velocity.y += impulseMagnitude;
         }
-    }
-    else if (key == '1') { // 1
+        break;
 
+    case '1':
         std::cout << "Memory used" << std::endl;
+        break;
+
+    case 'r': //remove box
+        colliders.pop_front();
+        break;
+
+    case 'a': //add box
+        break;
+
+    case 'A': //add sphere
+        break;
+
+    case 'R': //remove sphere
+        break;
     }
+
 }
 
 // the main function. 
