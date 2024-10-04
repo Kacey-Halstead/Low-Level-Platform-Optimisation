@@ -36,24 +36,27 @@ using namespace std::chrono;
 
 std::list<ColliderObject*> colliders;
 
+float GenerateRandom(float toDivide)
+{
+    return (static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / toDivide)));
+}
+
+
 void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
     auto start = steady_clock::now();
     for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
         Box* box = new Box();
 
         // Assign random x, y, and z positions within specified ranges
-        float pos = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 20.0f));
-        box->position = { pos, 10.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 1.0f)), pos };
+        box->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
 
         box->size = {1.0f, 1.0f, 1.0f};
 
         // Assign random x-velocity between -1.0f and 1.0f
-        float randomXVelocity = -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2.0f));
-        box->velocity = {randomXVelocity, 0.0f, 0.0f};
+        box->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f};
 
         // Assign a random color to the box
-        float colour = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        box->colour = { colour, colour, colour };
+        box->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
 
         colliders.emplace_back(box);
     }
@@ -62,20 +65,15 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
         Sphere* sphere = new Sphere;
 
         // Assign random x, y, and z positions within specified ranges
-        sphere->position.x = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 20.0f));
-        sphere->position.y = 10.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 1.0f));
-        sphere->position.z = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 20.0f));
+        sphere->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
 
         sphere->size = { 1.0f, 1.0f, 1.0f };
 
         // Assign random x-velocity between -1.0f and 1.0f
-        float randomXVelocity = -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 2.0f));
-        sphere->velocity = { randomXVelocity, 0.0f, 0.0f };
+        sphere->velocity = { -1.0f + GenerateRandom(2), 0.0f, 0.0f};
 
         // Assign a random color to the box
-        sphere->colour.x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        sphere->colour.y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        sphere->colour.z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        sphere->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
 
         colliders.emplace_back(sphere);
     }
