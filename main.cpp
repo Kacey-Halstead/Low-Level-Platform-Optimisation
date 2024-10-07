@@ -12,6 +12,8 @@
 #include "ColliderObject.h"
 #include "Box.h"
 #include "Sphere.h"
+#include "MemoryAllocation.h"
+#include "StaticClass.h"
 
 
 using namespace std::chrono;
@@ -36,6 +38,7 @@ using namespace std::chrono;
 
 std::list<ColliderObject*> colliders;
 
+
 float GenerateRandom(float toDivide)
 {
     return (static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / toDivide)));
@@ -43,7 +46,7 @@ float GenerateRandom(float toDivide)
 
 
 void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
-    auto start = steady_clock::now();
+    time_point<steady_clock> start = steady_clock::now();
     for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
         Box* box = new Box();
 
@@ -77,9 +80,10 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
 
         colliders.emplace_back(sphere);
     }
-    auto end = steady_clock::now();
-    auto total = end - start;
+    time_point<steady_clock> end = steady_clock::now();
+    duration<float, std::milli> total = end - start;
     std::cout << "Init time: " << total.count() << std::endl;
+
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
@@ -251,6 +255,7 @@ void mouse(int button, int state, int x, int y) {
         bool clickedBoxOK = false;
         float minIntersectionDistance = std::numeric_limits<float>::max();
 
+        ColliderObject* clickedBox = nullptr;
         for (ColliderObject* box : colliders) {
             if (rayBoxIntersection(cameraPosition, rayDirection, box)) {
                 // Calculate the distance between the camera and the intersected box
@@ -261,14 +266,14 @@ void mouse(int button, int state, int x, int y) {
                 if (distance < minIntersectionDistance) {
                     clickedBoxOK = true;
                     minIntersectionDistance = distance;
+                    clickedBox = box;
                 }
             }
         }
 
         // Remove the clicked box if any
         if (clickedBoxOK != false) {
-            // TODO
-            //colliders.erase(colliders.begin() + clickedBoxIndex);
+            colliders.remove(clickedBox);
         }
     }
 }

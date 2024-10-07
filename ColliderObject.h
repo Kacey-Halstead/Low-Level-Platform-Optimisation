@@ -13,6 +13,10 @@ public:
     Vec3 velocity;
     Vec3 colour;
 
+    static void* operator new(size_t size);
+    static void operator delete(void* p, size_t size);
+
+
     // if two colliders collide, push them away from each other
     void resolveCollision(ColliderObject* a, ColliderObject* b) {
         Vec3 normal = { a->position.x - b->position.x, a->position.y - b->position.y, a->position.z - b->position.z };
