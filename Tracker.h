@@ -9,47 +9,29 @@ enum Types
 
 namespace Tracker
 {
-	int trackedAmount;
+	int GetTrackedAmount();
 
-	void AddBytesAllocated(int numOfBytes)
-	{
-		trackedAmount += numOfBytes;
-	}
+	void AddBytesAllocated(int numOfBytes);
 
-	void RemoveBytesAllocated(int numOfBytes)
-	{
-		trackedAmount -= numOfBytes;
-	}
+	void RemoveBytesAllocated(int numOfBytes);
 };
 
 namespace CubeTracker 
 {
-	int trackedAmount;
+	int GetTrackedAmount();
 
-	void AddBytesAllocated(int numOfBytes)
-	{
-		trackedAmount += numOfBytes;
-	}
+	void AddBytesAllocated(int numOfBytes);
 
-	void RemoveBytesAllocated(int numOfBytes)
-	{
-		trackedAmount -= numOfBytes;
-	}
+	void RemoveBytesAllocated(int numOfBytes);
 };
 
 namespace SphereTracker
 {
-	int trackedAmount;
+	int GetTrackedAmount();
 
-	void AddBytesAllocated(int numOfBytes)
-	{
-		trackedAmount += numOfBytes;
-	}
+	void AddBytesAllocated(int numOfBytes);
 
-	void RemoveBytesAllocated(int numOfBytes)
-	{
-		trackedAmount -= numOfBytes;
-	}
+	void RemoveBytesAllocated(int numOfBytes);
 };
 
 

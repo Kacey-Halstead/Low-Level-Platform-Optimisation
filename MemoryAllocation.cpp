@@ -3,7 +3,7 @@
 struct Header
 {
 	int size; //size of main allocated section
-	Types* tracker;
+	Types tracker;
 };
 
 struct Footer
@@ -11,13 +11,13 @@ struct Footer
 	int reserved;
 };
 
-void* operator new (size_t size, Types* pTracker)
+void* operator new(size_t size)
 {
-	if (pTracker == NULL)
-	{
-		*pTracker = DEFAULT;
-	}
+	return ::operator new(size, DEFAULT);
+}
 
+void* operator new (size_t size, Types pTracker)
+{
 	size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
 	char* pMem = (char*)malloc(nRequestedBytes); //allocate
 	Header* pHeader = (Header*)pMem; //set header pointer to start of allocated mem
@@ -28,7 +28,7 @@ void* operator new (size_t size, Types* pTracker)
 	void* pFooterAddr = pMem + sizeof(Header) + size; //pointer to footer
 	Footer* pFooter = (Footer*)pFooterAddr; // cast footer to void pointer
 		
-	switch (*pTracker)
+	switch (pTracker)
 	{
 	case DEFAULT:
 		Tracker::AddBytesAllocated(size);
@@ -56,7 +56,7 @@ void operator delete (void * pMem)
 
 	size_t toRemove = sizeof(&pHeader) + sizeof(&pMem) + sizeof(&pFooter);
 
-	switch (*pHeader->tracker)
+	switch (pHeader->tracker)
 	{
 	case DEFAULT:
 		Tracker::RemoveBytesAllocated(toRemove);

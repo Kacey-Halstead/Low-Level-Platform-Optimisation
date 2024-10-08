@@ -14,9 +14,7 @@ public:
     Vec3 velocity;
     Vec3 colour;
 
-    static void* operator new(size_t size, Types* tTracker);
 
-    static void operator delete(void* p, size_t size);
 
     // if two colliders collide, push them away from each other
     void resolveCollision(ColliderObject* a, ColliderObject* b) {

@@ -34,9 +34,6 @@ using namespace std::chrono;
 #define LOOKDIR_Z 0
 
 
-
-
-
 std::list<ColliderObject*> colliders;
 
 
@@ -47,13 +44,9 @@ float GenerateRandom(float toDivide)
 }
 
 void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
-     
-    Types* type = new Types;
-    *type = CUBE;
-
     time_point<steady_clock> start = steady_clock::now();
     for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
-        Box* box = new(type) Box;
+        Box* box = new Box;
 
         // Assign random x, y, and z positions within specified ranges
         box->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
@@ -69,10 +62,9 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
         colliders.emplace_back(box);
     }
 
-    *type = SPHERE;
     for (int i = sphereCount; i--;) {
 
-        Sphere* sphere = new(type) Sphere;
+        Sphere* sphere = new Sphere;
 
         // Assign random x, y, and z positions within specified ranges
         sphere->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
@@ -89,10 +81,12 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
     }
     time_point<steady_clock> end = steady_clock::now();
     duration<float, std::milli> total = end - start;
-    std::cout << "Init time: " << total.count() << std::endl;
+    float time = total.count();
+    std::cout << "Init time: " << time << std::endl;
 
-    std::cout << "Sphere tracker: " << SphereTracker::trackedAmount << std::endl;
-    std::cout << "Cube tracker: " << CubeTracker::trackedAmount << std::endl;
+    std::cout << "Default tracker: " << Tracker::GetTrackedAmount() << std::endl;
+    std::cout << "Sphere tracker: " << SphereTracker::GetTrackedAmount() << std::endl;
+    std::cout << "Cube tracker: " << CubeTracker::GetTrackedAmount() << std::endl;
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
