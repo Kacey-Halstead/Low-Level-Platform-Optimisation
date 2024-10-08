@@ -1,6 +1,6 @@
 #include "ColliderObject.h"
 
-void* ColliderObject::operator new(size_t size, Tracker* tTracker)
+void* ColliderObject::operator new(size_t size, Types* tTracker)
 {
 	return ::operator new(size, tTracker);
 }

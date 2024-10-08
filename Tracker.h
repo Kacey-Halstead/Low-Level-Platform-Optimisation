@@ -1,22 +1,55 @@
 #pragma once
 
-static class Tracker
+enum Types
 {
-public:
+	DEFAULT,
+	CUBE,
+	SPHERE
+};
+
+namespace Tracker
+{
 	int trackedAmount;
 
-	void AddBytesAllocated(int numOfBytes);
-	void RemoveBytesAllocated(int numOfBytes);
+	void AddBytesAllocated(int numOfBytes)
+	{
+		trackedAmount += numOfBytes;
+	}
+
+	void RemoveBytesAllocated(int numOfBytes)
+	{
+		trackedAmount -= numOfBytes;
+	}
 };
 
-static class CubeTracker : public Tracker
+namespace CubeTracker 
 {
+	int trackedAmount;
 
+	void AddBytesAllocated(int numOfBytes)
+	{
+		trackedAmount += numOfBytes;
+	}
+
+	void RemoveBytesAllocated(int numOfBytes)
+	{
+		trackedAmount -= numOfBytes;
+	}
 };
 
-static class SphereTracker : public Tracker
+namespace SphereTracker
 {
+	int trackedAmount;
 
+	void AddBytesAllocated(int numOfBytes)
+	{
+		trackedAmount += numOfBytes;
+	}
+
+	void RemoveBytesAllocated(int numOfBytes)
+	{
+		trackedAmount -= numOfBytes;
+	}
 };
 
 

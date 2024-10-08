@@ -13,9 +13,8 @@ public:
     Vec3 size;
     Vec3 velocity;
     Vec3 colour;
-    static Tracker* trackerRef;
 
-    static void* operator new(size_t size, Tracker* tTracker);
+    static void* operator new(size_t size, Types* tTracker);
 
     static void operator delete(void* p, size_t size);
 

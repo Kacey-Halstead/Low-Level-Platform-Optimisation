@@ -3,5 +3,5 @@
 #include <iostream>
 #include "Tracker.h"
 
-void* operator new (size_t size, Tracker* pTracker);
-void operator delete(void* pMem, Tracker* pTracker);
+void* operator new (size_t size, Types* pTracker);
+void operator delete(void* pMem, Types* pTracker);

@@ -3,7 +3,7 @@
 struct Header
 {
 	int size; //size of main allocated section
-	Tracker* tracker;
+	Types* tracker;
 };
 
 struct Footer
@@ -11,12 +11,11 @@ struct Footer
 	int reserved;
 };
 
-void* operator new (size_t size, Tracker* pTracker)
+void* operator new (size_t size, Types* pTracker)
 {
-	if (pTracker == nullptr)
+	if (pTracker == NULL)
 	{
-		Tracker* t = (Tracker*)malloc(sizeof(Tracker));
-		Tracker* pTracker = (Tracker*)t;
+		*pTracker = DEFAULT;
 	}
 
 	size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
@@ -29,7 +28,23 @@ void* operator new (size_t size, Tracker* pTracker)
 	void* pFooterAddr = pMem + sizeof(Header) + size; //pointer to footer
 	Footer* pFooter = (Footer*)pFooterAddr; // cast footer to void pointer
 		
-	pTracker->AddBytesAllocated(size);
+	switch (*pTracker)
+	{
+	case DEFAULT:
+		Tracker::AddBytesAllocated(size);
+		break;
+
+	case CUBE:
+		CubeTracker::AddBytesAllocated(size);
+		break;
+
+	case SPHERE:
+		SphereTracker::AddBytesAllocated(size);
+		break;
+	default:
+		break;
+	}
+
 
 	return pMem + sizeof(Header);
 }
@@ -39,7 +54,24 @@ void operator delete (void * pMem)
 	Header* pHeader = (Header*)((char*)pMem - sizeof(Header));
 	Footer* pFooter = (Footer*)((char*)pMem + pHeader->size);
 
-	pHeader->tracker->RemoveBytesAllocated(sizeof(&pHeader) + sizeof(&pMem) + sizeof(&pFooter));
+	size_t toRemove = sizeof(&pHeader) + sizeof(&pMem) + sizeof(&pFooter);
+
+	switch (*pHeader->tracker)
+	{
+	case DEFAULT:
+		Tracker::RemoveBytesAllocated(toRemove);
+		break;
+
+	case CUBE:
+		CubeTracker::RemoveBytesAllocated(toRemove);
+		break;
+
+	case SPHERE:
+		SphereTracker::RemoveBytesAllocated(toRemove);
+		break;
+	default:
+		break;
+	}
 
 	free(pHeader);
 }

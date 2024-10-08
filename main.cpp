@@ -39,9 +39,7 @@ using namespace std::chrono;
 
 std::list<ColliderObject*> colliders;
 
-Tracker* defaultTracker = new Tracker;
-Tracker* cubeTracker = new CubeTracker;
-Tracker* sphereTracker = new SphereTracker;
+
 
 float GenerateRandom(float toDivide)
 {
@@ -50,9 +48,12 @@ float GenerateRandom(float toDivide)
 
 void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
      
+    Types* type = new Types;
+    *type = CUBE;
+
     time_point<steady_clock> start = steady_clock::now();
     for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
-        Box* box = new(cubeTracker) Box;
+        Box* box = new(type) Box;
 
         // Assign random x, y, and z positions within specified ranges
         box->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
@@ -68,8 +69,10 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
         colliders.emplace_back(box);
     }
 
+    *type = SPHERE;
     for (int i = sphereCount; i--;) {
-        Sphere* sphere = new(sphereTracker) Sphere;
+
+        Sphere* sphere = new(type) Sphere;
 
         // Assign random x, y, and z positions within specified ranges
         sphere->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
@@ -88,8 +91,8 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
     duration<float, std::milli> total = end - start;
     std::cout << "Init time: " << total.count() << std::endl;
 
-    std::cout << "Sphere tracker: " << sphereTracker->trackedAmount << std::endl;
-    std::cout << "Cube tracker: " << cubeTracker->trackedAmount << std::endl;
+    std::cout << "Sphere tracker: " << SphereTracker::trackedAmount << std::endl;
+    std::cout << "Cube tracker: " << CubeTracker::trackedAmount << std::endl;
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
