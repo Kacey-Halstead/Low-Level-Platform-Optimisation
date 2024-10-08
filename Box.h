@@ -5,7 +5,6 @@
 class Box : public ColliderObject
 {
 public:
-
 	void drawMesh() { glutSolidCube(1.0); }
 };
 

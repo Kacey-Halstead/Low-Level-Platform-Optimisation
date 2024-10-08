@@ -4,6 +4,7 @@
 #include <list>
 #include <GL/glut.h>
 #include "globals.h"
+#include "Tracker.h"
 
 class ColliderObject
 {
@@ -12,10 +13,11 @@ public:
     Vec3 size;
     Vec3 velocity;
     Vec3 colour;
+    static Tracker* trackerRef;
 
-    static void* operator new(size_t size);
+    static void* operator new(size_t size, Tracker* tTracker);
+
     static void operator delete(void* p, size_t size);
-
 
     // if two colliders collide, push them away from each other
     void resolveCollision(ColliderObject* a, ColliderObject* b) {

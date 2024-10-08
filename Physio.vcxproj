@@ -179,6 +179,7 @@
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="StaticClass.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="Tracker.cpp" />
     <ClCompile Include="Vec3.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +191,7 @@
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="StaticClass.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="Tracker.h" />
     <ClInclude Include="Vec3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
