@@ -18,6 +18,7 @@ namespace Tracker
 
 namespace CubeTracker 
 {
+
 	int GetTrackedAmount();
 
 	void AddBytesAllocated(int numOfBytes);

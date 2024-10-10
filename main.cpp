@@ -82,7 +82,6 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
     }
 
     Timer::EndTimer();
-    std::cout << "Init time: " << Timer::GetElapsedTime() << std::endl;
 
     std::cout << "Default tracker: " << Tracker::GetTrackedAmount() << std::endl;
     std::cout << "Sphere tracker: " << SphereTracker::GetTrackedAmount() << std::endl;
