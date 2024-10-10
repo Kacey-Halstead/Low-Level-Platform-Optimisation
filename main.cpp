@@ -15,6 +15,7 @@
 #include "MemoryAllocation.h"
 #include "StaticClass.h"
 #include "Tracker.h"
+#include "Timer.h"
 
 
 using namespace std::chrono;
