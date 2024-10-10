@@ -2,7 +2,14 @@
 
 namespace Timer
 {
+	duration<float, std::milli> elapsedTime;
+	time_point<steady_clock> startPoint;
+	time_point<steady_clock> endPoint;
 
+	float GetElapsedTime()
+	{
+		return elapsedTime.count();
+	}
 
 	void Timer::StartTimer()
 	{

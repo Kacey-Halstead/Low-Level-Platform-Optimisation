@@ -45,7 +45,7 @@ float GenerateRandom(float toDivide)
 }
 
 void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
-    time_point<steady_clock> start = steady_clock::now();
+    Timer::StartTimer();
     for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
         Box* box = new Box;
 
@@ -80,10 +80,9 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
 
         colliders.emplace_back(sphere);
     }
-    time_point<steady_clock> end = steady_clock::now();
-    duration<float, std::milli> total = end - start;
-    float time = total.count();
-    std::cout << "Init time: " << time << std::endl;
+
+    Timer::EndTimer();
+    std::cout << "Init time: " << Timer::GetElapsedTime() << std::endl;
 
     std::cout << "Default tracker: " << Tracker::GetTrackedAmount() << std::endl;
     std::cout << "Sphere tracker: " << SphereTracker::GetTrackedAmount() << std::endl;
