@@ -12,12 +12,12 @@ namespace Timer
 		return elapsedTime.count();
 	}
 
-	void Timer::StartTimer()
+	void StartTimer()
 	{
 		startPoint = steady_clock::now();
 	}
 
-	void Timer::EndTimer()
+	void EndTimer()
 	{
 		endPoint = steady_clock::now();
 		elapsedTime = endPoint - startPoint;

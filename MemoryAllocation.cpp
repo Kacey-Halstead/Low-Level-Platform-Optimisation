@@ -4,17 +4,59 @@ struct Header
 {
 	int size; //size of main allocated section
 	Types tracker;
-	int checkValue;
 	Header* previous;
+	Header* next;
+	int checkValueH;
 };
 
 struct Footer
 {
-	int reserved;
-	Header* next;
+	int checkValueF;
 };
 
-Header* previousHeader = nullptr;
+namespace MemoryAlloc
+{
+	Header* lastHeader = nullptr;
+	Header* firstHeader = nullptr;
+
+	const int headerCheckValue = 0xDEADC0DE;
+	const int footerCheckValue = 0xDEADBEEF;
+
+	void WalkTheHeap()
+	{
+		Header* header = firstHeader;
+		int counter = 0;
+		int totalMemCount = 0;
+
+		while (header != nullptr)
+		{
+			Footer* footer = (Footer*)((char*)header + sizeof(Header) + header->size);
+
+			totalMemCount += header->size;
+
+			std::cout << ++counter << ". Size: " << header->size;
+			std::cout << " | Tracker Type: " << header->tracker;
+
+			if (footer->checkValueF != MemoryAlloc::footerCheckValue)
+			{
+				std::cout << " | Footer buffer overflow at :" << footer;
+			}
+
+			//check values
+			if (header->checkValueH != MemoryAlloc::headerCheckValue)
+			{
+				std::cout << " | Header buffer overflow at :" << header;
+				break;
+			}
+			std::cout << std::endl;
+
+			header = header->next; //set header to next header in list
+
+		}
+		std::cout << "\nTotal memory used on heap: " << totalMemCount << std::endl;
+	}
+};
+
 
 void* operator new(size_t size)
 {
@@ -30,19 +72,23 @@ void* operator new (size_t size, Types pTracker)
 	pHeader->size = size;
 	pHeader->tracker = pTracker;
 
-	void* pFooterAddr = pMem + sizeof(Header) + size; //pointer to footer
-	Footer* pFooter = (Footer*)pFooterAddr; 
+	Footer* pFooter = (Footer*)(pMem + sizeof(Header) + size); //pointer to footer
 
-	if (previousHeader != nullptr) //if there is a previous header
+	pHeader->checkValueH = MemoryAlloc::headerCheckValue;
+	pFooter->checkValueF = MemoryAlloc::footerCheckValue;
+
+	if (MemoryAlloc::lastHeader != nullptr) //if there is a previous header
 	{
-		void* footerLoc = previousHeader + sizeof(previousHeader) + previousHeader->size;
-		Footer* prevFooter = (Footer*)footerLoc; //get footer location
-
-		prevFooter->next = pHeader; //set next header in prev footer to this one
-		pHeader->previous = previousHeader; //set previous header in this header to previousHeader
+		MemoryAlloc::lastHeader->next = pHeader; //set next header in prev footer to this one
+		pHeader->next = nullptr;
+		pHeader->previous = MemoryAlloc::lastHeader; //set previous header in this header to previousHeader
+	}
+	else
+	{
+		MemoryAlloc::firstHeader = pHeader;
 	}
 
-	previousHeader = pHeader; //Set this header to new previous header
+	MemoryAlloc::lastHeader = pHeader; //Set this header to new previous header
 		
 	switch (pTracker)
 	{
@@ -70,30 +116,51 @@ void operator delete (void * pMem)
 	Header* pHeader = (Header*)((char*)pMem - sizeof(Header));
 	Footer* pFooter = (Footer*)((char*)pMem + pHeader->size);
 
-	size_t toRemove = sizeof(&pHeader) + sizeof(&pMem) + sizeof(&pFooter);
+	if (pHeader->checkValueH != MemoryAlloc::headerCheckValue)
+	{
+		std::cout << "Header buffer overflow at :" << pHeader << std::endl;
+	}
 
+	if (pFooter->checkValueF != MemoryAlloc::footerCheckValue)
+	{
+		std::cout << "Footer buffer overflow at :" << pFooter << std::endl;
+	}
 
 	Header* prev = pHeader->previous;
-	Header* next = pFooter->next;
+	Header* next = pHeader->next;
 
-	void* footerLoc = prev + sizeof(prev) + prev->size; 
-	Footer* prevFooter = (Footer*)footerLoc; //previous footer
+	if (next != nullptr) //if next exists
+	{
+		next->previous = prev;
+	}
 
-	prevFooter->next = next;
-	next->previous = prev;
+	if (prev != nullptr) //if previous exists
+	{
+		prev->next = next;
+	}
+
+	if (MemoryAlloc::firstHeader == pHeader) //if current is first header in list
+	{
+		MemoryAlloc::firstHeader = next;
+	}
+
+	if (MemoryAlloc::lastHeader == pHeader) //if current is last header in list
+	{
+		MemoryAlloc::lastHeader = prev;
+	}
 
 	switch (pHeader->tracker)
 	{
 	case DEFAULT:
-		Tracker::RemoveBytesAllocated(toRemove);
+		Tracker::RemoveBytesAllocated(pHeader->size);
 		break;
 
 	case CUBE:
-		CubeTracker::RemoveBytesAllocated(toRemove);
+		CubeTracker::RemoveBytesAllocated(pHeader->size);
 		break;
 
 	case SPHERE:
-		SphereTracker::RemoveBytesAllocated(toRemove);
+		SphereTracker::RemoveBytesAllocated(pHeader->size);
 		break;
 	default:
 		break;

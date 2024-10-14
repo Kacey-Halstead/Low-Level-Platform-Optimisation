@@ -4,8 +4,6 @@ using namespace std::chrono;
 
 namespace Timer
 {
-
-
 	float GetElapsedTime();
 	
 	void StartTimer();
