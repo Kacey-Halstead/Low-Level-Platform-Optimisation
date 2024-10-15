@@ -17,7 +17,11 @@ struct Footer
 
 namespace MemoryAlloc
 {
-	MemoryPool* pool = new MemoryPool(500, 100);
+	MemoryPool* GetPool()
+	{
+		static MemoryPool pool{ 500,100 };
+		return &pool;
+	}
 
 	Header* lastHeader = nullptr;
 	Header* firstHeader = nullptr;
@@ -68,15 +72,12 @@ void* operator new(size_t size)
 
 void* operator new (size_t size, Types pTracker)
 {
-	char* pMem;
-	void* mem = MemoryAlloc::pool->Alloc(size);
-	if (mem != nullptr) //if room in memory pool
+	size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
+
+	MemoryPool* pool = MemoryAlloc::GetPool();
+	char* pMem = (char*)pool->Alloc(nRequestedBytes);
+	if (pMem == nullptr) //if no room in memory pool
 	{
-		pMem = (char*)mem;
-	}
-	else
-	{
-		size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
 		pMem = (char*)malloc(nRequestedBytes); //allocate
 	}
 

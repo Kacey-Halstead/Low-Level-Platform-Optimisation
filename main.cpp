@@ -46,37 +46,27 @@ float GenerateRandom(float toDivide)
 
 inline ColliderObject* CreateObj(bool isBox)
 {
+    ColliderObject* object;
     if (isBox)
     {
-        Box* box = new Box;
-        // Assign random x, y, and z positions within specified ranges
-        box->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
-
-        box->size = { 1.0f, 1.0f, 1.0f };
-
-        // Assign random x-velocity between -1.0f and 1.0f
-        box->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
-
-        // Assign a random color to the box
-        box->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
-        return box;
+        object = new Box;
     }
     else
     {
-        Sphere* sphere = new Sphere;
-        // Assign random x, y, and z positions within specified ranges
-        sphere->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
-
-        sphere->size = { 1.0f, 1.0f, 1.0f };
-
-        // Assign random x-velocity between -1.0f and 1.0f
-        sphere->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
-
-        // Assign a random color to the box
-        sphere->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
-        return sphere;
+        object = new Sphere;
     }
-    return nullptr;
+
+    // Assign random x, y, and z positions within specified ranges
+    object->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
+
+    object->size = { 1.0f, 1.0f, 1.0f };
+
+    // Assign random x-velocity between -1.0f and 1.0f
+    object->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
+
+    // Assign a random colour to the object
+    object->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
+    return object;
 }
 
 

@@ -5,28 +5,26 @@ MemoryPool::MemoryPool(size_t iObjectSize, size_t eachChunkSize)
 	poolSize = iObjectSize;
 	chunkSize = eachChunkSize;
 
-	char* pMem = (char*)malloc(iObjectSize);
+	pMem = (char*)malloc(iObjectSize);
 
 	int numChunks = poolSize / chunkSize;
-	pointers.emplace(numChunks);
-
-	for (int i = 1; i < numChunks; i++)
+	for (int i = 0; i < numChunks; i++)
 	{
-		char* point = (char*)(pMem + (chunkSize * i));
+		void* point = (char*)pMem + (chunkSize * i);
 		pointers[point] = true; //set all to free
 	}
 }
 
 MemoryPool::~MemoryPool()
 {
-
+	free(pMem);
 }
 
 void* MemoryPool::Alloc(size_t iSize)
 {
 	for (auto& p : pointers) //check for free memory
 	{
-		if (!p.second && iSize <= chunkSize) //if memory free and right size, return pointer to memory
+		if (p.second && iSize <= chunkSize) //if memory free and right size, return pointer to memory
 		{
 			p.second = false;
 			return p.first;
@@ -36,8 +34,15 @@ void* MemoryPool::Alloc(size_t iSize)
 	return nullptr;
 }
 
-void MemoryPool::Free(void* p, size_t iSize)
+void MemoryPool::Free(void* p)
 {
-	free(p);
-	pointers[(char*)p] = true;
+	auto it = pointers.find(p);
+	if (it == pointers.end())
+	{
+		// need to call default free in delete operator
+	}
+	else
+	{
+		it->second = true;
+	}
 }
