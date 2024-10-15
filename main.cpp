@@ -44,52 +44,51 @@ float GenerateRandom(float toDivide)
     return (static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / toDivide)));
 }
 
-inline Box* CreateBox(Vec3 pos, Vec3 size, Vec3 vel, Vec3 colour)
+inline ColliderObject* CreateObj(bool isBox)
 {
-    Box* box = new Box;
-    // Assign random x, y, and z positions within specified ranges
-    box->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
+    if (isBox)
+    {
+        Box* box = new Box;
+        // Assign random x, y, and z positions within specified ranges
+        box->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
 
-    box->size = { 1.0f, 1.0f, 1.0f };
+        box->size = { 1.0f, 1.0f, 1.0f };
 
-    // Assign random x-velocity between -1.0f and 1.0f
-    box->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
+        // Assign random x-velocity between -1.0f and 1.0f
+        box->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
 
-    // Assign a random color to the box
-    box->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
-    return box;
+        // Assign a random color to the box
+        box->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
+        return box;
+    }
+    else
+    {
+        Sphere* sphere = new Sphere;
+        // Assign random x, y, and z positions within specified ranges
+        sphere->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
+
+        sphere->size = { 1.0f, 1.0f, 1.0f };
+
+        // Assign random x-velocity between -1.0f and 1.0f
+        sphere->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
+
+        // Assign a random color to the box
+        sphere->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
+        return sphere;
+    }
+    return nullptr;
 }
 
-inline Sphere* CreateSphere(Vec3 pos, Vec3 size, Vec3 vel, Vec3 colour)
-{
-    Sphere* sphere = new Sphere;
-    // Assign random x, y, and z positions within specified ranges
-    sphere->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
-
-    sphere->size = { 1.0f, 1.0f, 1.0f };
-
-    // Assign random x-velocity between -1.0f and 1.0f
-    sphere->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
-
-    // Assign a random color to the box
-    sphere->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
-    return sphere;
-}
 
 void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
     Timer::StartTimer();
 
-    Vec3 pos = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
-    Vec3 size = { 1.0f, 1.0f, 1.0f };
-    Vec3 velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };  // Assign random x-velocity between -1.0f and 1.0f
-    Vec3 colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) }; // Assign a random color to the box
-
     for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
-        colliders.emplace_back(CreateBox(pos, size, velocity, colour));
+        colliders.emplace_back(CreateObj(true));
     }
 
     for (int i = sphereCount; i--;) {
-        colliders.emplace_back(CreateSphere(pos, size, velocity, colour));
+        colliders.emplace_back(CreateObj(false));
     }
 
     Timer::EndTimer();
@@ -312,6 +311,7 @@ void keyboard(unsigned char key, int x, int y) {
         char* Footername = new char[10];
         const char* toCopy = "aaaaaaaaaaaaaa";
         memcpy(Footername, toCopy, 15);
+        std::cout << "\nEnforced footer buffer overflow" << std::endl;
     }
         break;
 
@@ -320,6 +320,7 @@ void keyboard(unsigned char key, int x, int y) {
         char* Headername = new char[10];
         const char* toCopy = "aaaaaaaaaaaaaa";
         memcpy(Headername-5, toCopy, 15);
+        std::cout << "\nEnforced header buffer overflow" << std::endl;
     }
     break;
 
@@ -327,27 +328,20 @@ void keyboard(unsigned char key, int x, int y) {
         if (colliders.size() <= 0) break;
         delete colliders.front();
         colliders.pop_front();
+        std::cout << "\nRemoved box" << std::endl;
         break;
 
     case 'a': //add box
     {
-        Vec3 pos = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
-        Vec3 size = { 1.0f, 1.0f, 1.0f };
-        Vec3 velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };  // Assign random x-velocity between -1.0f and 1.0f
-        Vec3 colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) }; // Assign a random color to the box
-
-        colliders.emplace_front(CreateBox(pos, size, velocity, colour));
+        colliders.emplace_front(CreateObj(true));
+        std::cout << "\nAdded box" << std::endl;
     }
         break;
 
     case 'A': //add sphere
     {
-        Vec3 pos = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
-        Vec3 size = { 1.0f, 1.0f, 1.0f };
-        Vec3 velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };  // Assign random x-velocity between -1.0f and 1.0f
-        Vec3 colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) }; // Assign a random color to the box
-
-        colliders.emplace_back(CreateSphere(pos, size, velocity, colour));
+        colliders.emplace_back(CreateObj(false));
+        std::cout << "\nAdded sphere" << std::endl;
     }
         break;
 
@@ -355,10 +349,11 @@ void keyboard(unsigned char key, int x, int y) {
         if (colliders.size() <= 0) break;
         delete colliders.back();
         colliders.pop_back();
+        std::cout << "\nRemoved sphere" << std::endl;
         break;
 
     case 'm':
-        std::cout << "Default tracker: " << Tracker::GetTrackedAmount() << std::endl;
+        std::cout << "\nDefault tracker: " << Tracker::GetTrackedAmount() << std::endl;
         std::cout << "Sphere tracker: " << SphereTracker::GetTrackedAmount() << std::endl;
         std::cout << "Cube tracker: " << CubeTracker::GetTrackedAmount() << std::endl;
     }

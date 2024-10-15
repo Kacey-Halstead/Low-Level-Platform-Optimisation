@@ -1,4 +1,5 @@
 #include "MemoryAllocation.h"
+#include "MemoryPool.h"
 
 struct Header
 {
@@ -16,6 +17,8 @@ struct Footer
 
 namespace MemoryAlloc
 {
+	MemoryPool* pool = new MemoryPool(500, 100);
+
 	Header* lastHeader = nullptr;
 	Header* firstHeader = nullptr;
 
@@ -34,15 +37,15 @@ namespace MemoryAlloc
 
 			totalMemCount += header->size;
 
-			std::cout << ++counter << ". Size: " << header->size;
+			std::cout << std::endl << ++counter << ". Size: " << header->size;
 			std::cout << " | Tracker Type: " << header->tracker;
 
+			//check values
 			if (footer->checkValueF != MemoryAlloc::footerCheckValue)
 			{
 				std::cout << " | Footer buffer overflow at :" << footer;
 			}
 
-			//check values
 			if (header->checkValueH != MemoryAlloc::headerCheckValue)
 			{
 				std::cout << " | Header buffer overflow at :" << header;
@@ -65,10 +68,19 @@ void* operator new(size_t size)
 
 void* operator new (size_t size, Types pTracker)
 {
-	size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
-	char* pMem = (char*)malloc(nRequestedBytes); //allocate
-	Header* pHeader = (Header*)pMem; //set header pointer to start of allocated mem
+	char* pMem;
+	void* mem = MemoryAlloc::pool->Alloc(size);
+	if (mem != nullptr) //if room in memory pool
+	{
+		pMem = (char*)mem;
+	}
+	else
+	{
+		size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
+		pMem = (char*)malloc(nRequestedBytes); //allocate
+	}
 
+	Header* pHeader = (Header*)pMem; //set header pointer to start of allocated mem
 	pHeader->size = size;
 	pHeader->tracker = pTracker;
 

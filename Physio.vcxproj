@@ -176,6 +176,7 @@
     <ClCompile Include="ColliderObject.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MemoryAllocation.cpp" />
+    <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="StaticClass.cpp" />
     <ClCompile Include="Timer.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="ColliderObject.h" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="MemoryAllocation.h" />
+    <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="StaticClass.h" />
     <ClInclude Include="Timer.h" />

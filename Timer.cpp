@@ -21,7 +21,7 @@ namespace Timer
 	{
 		endPoint = steady_clock::now();
 		elapsedTime = endPoint - startPoint;
-		std::cout << "Timer: " << Timer::GetElapsedTime() << std::endl;
+		std::cout << "\nTimer: " << Timer::GetElapsedTime() << std::endl;
 	}
 }
 
