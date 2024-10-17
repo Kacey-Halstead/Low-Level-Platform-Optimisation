@@ -50,10 +50,12 @@ inline ColliderObject* CreateObj(bool isBox)
     if (isBox)
     {
         object = new Box;
+        object->typeName = "Box";
     }
     else
     {
         object = new Sphere;
+        object->typeName = "Sphere";
     }
 
     // Assign random x, y, and z positions within specified ranges
@@ -315,10 +317,13 @@ void keyboard(unsigned char key, int x, int y) {
     break;
 
     case 'r': //remove box
-        if (colliders.size() <= 0) break;
-        delete colliders.front();
+    {
+        if (colliders.size() <= 0 || colliders.front()->typeName != "Box") break;
+        Box* box = (Box*)colliders.front();
+        delete box;
         colliders.pop_front();
         std::cout << "\nRemoved box" << std::endl;
+    }
         break;
 
     case 'a': //add box
@@ -336,10 +341,13 @@ void keyboard(unsigned char key, int x, int y) {
         break;
 
     case 'R': //remove sphere
-        if (colliders.size() <= 0) break;
-        delete colliders.back();
+    {
+        if (colliders.size() <= 0 || colliders.back()->typeName != "Sphere") break;
+        Sphere* sphere = (Sphere*)colliders.back();
+        delete sphere;
         colliders.pop_back();
         std::cout << "\nRemoved sphere" << std::endl;
+    }
         break;
 
     case 'm':

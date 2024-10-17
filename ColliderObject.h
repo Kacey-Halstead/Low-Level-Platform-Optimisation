@@ -3,6 +3,7 @@
 #include "Vec3.h"
 #include <list>
 #include <GL/glut.h>
+#include <string>
 #include "globals.h"
 #include "Tracker.h"
 
@@ -13,6 +14,7 @@ public:
     Vec3 size;
     Vec3 velocity;
     Vec3 colour;
+    std::string typeName;
 
     // if two colliders collide, push them away from each other
     void resolveCollision(ColliderObject* a, ColliderObject* b) {

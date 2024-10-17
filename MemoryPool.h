@@ -2,6 +2,11 @@
 #include <vector>
 #include <map>
 
+struct Pair
+{
+	void* memPtr;
+	bool isFree;
+};
 
 class MemoryPool
 {
@@ -10,12 +15,15 @@ public:
 	~MemoryPool();
 
 	void* Alloc(size_t iSize);
-	void Free(void* p);
+	bool Free(void* p);
+
+	size_t chunkSize;
 
 private:
-	std::map<void*, bool> pointers; // Change map to malloc allocated array of pairs or indexes using ((p - pMem) / chunkSize)
+	Pair* pairArray;
 	void* pMem;
 	size_t poolSize;
-	size_t chunkSize;
+
+	int numberOfChunks;
 };
 

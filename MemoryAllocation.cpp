@@ -1,5 +1,6 @@
 #include "MemoryAllocation.h"
 #include "MemoryPool.h"
+#include <array>
 
 struct Header
 {
@@ -17,10 +18,10 @@ struct Footer
 
 namespace MemoryAlloc
 {
-	MemoryPool* GetPool()
+	MemoryPool* GetPool(int index)
 	{
-		static MemoryPool pool{ 500,100 };
-		return &pool;
+		static std::array<MemoryPool, 3> pools = { MemoryPool(1000, 200), MemoryPool(750, 150), MemoryPool( 500,100) };
+		return &pools[index];
 	}
 
 	Header* lastHeader = nullptr;
@@ -70,13 +71,32 @@ void* operator new(size_t size)
 	return ::operator new(size, DEFAULT);
 }
 
+MemoryPool* GetPoolSize(size_t size)
+{
+	MemoryPool* biggestPool = MemoryAlloc::GetPool(0);
+	MemoryPool* mediumPool = MemoryAlloc::GetPool(1);
+	MemoryPool* smallPool = MemoryAlloc::GetPool(2);
+
+	if (size <= smallPool->chunkSize)
+	{
+		return smallPool;
+	}
+	else if(size > smallPool->chunkSize && size <= mediumPool->chunkSize)
+	{
+		return mediumPool;
+	}
+	else
+	{
+		return biggestPool;
+	}
+}
+
 void* operator new (size_t size, Types pTracker)
 {
 	size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
 
-	MemoryPool* pool = MemoryAlloc::GetPool();
-	char* pMem = (char*)pool->Alloc(nRequestedBytes);
-	if (pMem == nullptr) //if no room in memory pool
+	char* pMem = (char*)GetPoolSize(nRequestedBytes)->Alloc(nRequestedBytes);
+	if(pMem == nullptr) //if no room in memory pool
 	{
 		pMem = (char*)malloc(nRequestedBytes); //allocate
 	}
@@ -119,7 +139,6 @@ void* operator new (size_t size, Types pTracker)
 	default:
 		break;
 	}
-
 
 	return pMem + sizeof(Header);
 }
@@ -179,5 +198,11 @@ void operator delete (void * pMem)
 		break;
 	}
 
-	free(pHeader);
+	int size = sizeof(Header) + pHeader->size + sizeof(Footer);
+	MemoryPool* pool = GetPoolSize(size);
+
+	if (!pool->Free(pHeader)) //if not work
+	{
+		free(pHeader);
+	}
 }

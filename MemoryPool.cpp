@@ -4,14 +4,18 @@ MemoryPool::MemoryPool(size_t iObjectSize, size_t eachChunkSize)
 {
 	poolSize = iObjectSize;
 	chunkSize = eachChunkSize;
+	numberOfChunks = poolSize / chunkSize;;
 
 	pMem = (char*)malloc(iObjectSize);
+	if (pMem == nullptr) return;
 
-	int numChunks = poolSize / chunkSize;
-	for (int i = 0; i < numChunks; i++)
+	pairArray = (Pair*)malloc(sizeof(Pair) * numberOfChunks);
+	if (pairArray == nullptr) return;
+
+	for (int i = 0; i < numberOfChunks; i++)
 	{
 		void* point = (char*)pMem + (chunkSize * i);
-		pointers[point] = true; //set all to free
+		pairArray[i] = Pair{ point, true };
 	}
 }
 
@@ -22,27 +26,29 @@ MemoryPool::~MemoryPool()
 
 void* MemoryPool::Alloc(size_t iSize)
 {
-	for (auto& p : pointers) //check for free memory
+	for (int i = 0; i < numberOfChunks; i++) //check for free memory
 	{
-		if (p.second && iSize <= chunkSize) //if memory free and right size, return pointer to memory
+
+		if (pairArray[i].isFree && iSize <= chunkSize) //if memory free and right size, return pointer to memory
 		{
-			p.second = false;
-			return p.first;
+			pairArray[i].isFree = false;
+			return pairArray[i].memPtr;
 		}
 	}
 
 	return nullptr;
 }
 
-void MemoryPool::Free(void* p)
+bool MemoryPool::Free(void* p)
 {
-	auto it = pointers.find(p);
-	if (it == pointers.end())
+	for (int i = 0; i < numberOfChunks; i++)
 	{
-		// need to call default free in delete operator
+		if (pairArray[i].memPtr == p)
+		{
+			pairArray[i].isFree = true;
+			return true;
+		}
 	}
-	else
-	{
-		it->second = true;
-	}
+
+	return false;
 }
