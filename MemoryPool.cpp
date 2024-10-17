@@ -1,45 +1,37 @@
 #include "MemoryPool.h"
 
-MemoryPool::MemoryPool(size_t iObjectSize, size_t eachChunkSize)
+MemoryPool::MemoryPool(int numChunks, size_t eachChunkSize)
 {
-	poolSize = iObjectSize;
+	poolSize = numChunks*eachChunkSize;
 	chunkSize = eachChunkSize;
-	numberOfChunks = poolSize / chunkSize;;
+	numberOfChunks = numChunks;
 
-	pMem = (char*)malloc(iObjectSize);
-	if (pMem == nullptr) return;
+	StartOfPoolPtr = (char*)malloc(poolSize); //creates big chunk of memory
+	if (StartOfPoolPtr == nullptr) return;
 
-	pairArray = (Pair*)malloc(sizeof(Pair) * numberOfChunks);
-
-	void** freeMemory = (void**)malloc(sizeof(void*) * numberOfChunks);
-	int freeBlocks = numberOfChunks;
-	pMem <= ptr < pMem + poolSize // in the pool
-
-	if (pairArray == nullptr) return;
+	freeMemoryArr = (void**)malloc(sizeof(void*) * numberOfChunks); //creates array of pointers to the pointers to memory and is the size of numberofchunks
+	if (freeMemoryArr == nullptr) return;
+	freeBlocks = numberOfChunks;
 
 	for (int i = 0; i < numberOfChunks; i++)
 	{
-		void* point = (char*)pMem + (chunkSize * i);
-		pairArray[i] = Pair{ point, true };
+		void* point = (char*)StartOfPoolPtr + (chunkSize * i);
+		freeMemoryArr[i] = point;
 	}
 }
 
 MemoryPool::~MemoryPool()
 {
-	free(pMem);
+	free(StartOfPoolPtr);
 }
 
 void* MemoryPool::Alloc(size_t iSize)
 {
-	for (int i = 0; i < numberOfChunks; i++) //check for free memory
+	if (freeBlocks > 0) //are any blocks free?
 	{
-
-		if (pairArray[i].isFree && iSize <= chunkSize) //if memory free and right size, return pointer to memory
-		{
-			memUsed += chunkSize;
-			pairArray[i].isFree = false;
-			return pairArray[i].memPtr;
-		}
+		void* memPtr = freeMemoryArr[freeBlocks - 1]; //set pointer to void (take out of free list)
+		freeBlocks--;
+		return memPtr;
 	}
 
 	return nullptr;
@@ -47,20 +39,22 @@ void* MemoryPool::Alloc(size_t iSize)
 
 bool MemoryPool::Free(void* p)
 {
-	for (int i = 0; i < numberOfChunks; i++)
+	if (StartOfPoolPtr <= p && p < ((char*)StartOfPoolPtr + poolSize)) //is pointer in pool?
 	{
-		if (pairArray[i].memPtr == p)
-		{
-			memUsed -= chunkSize;
-			pairArray[i].isFree = true;
-			return true;
-		}
+		freeMemoryArr[freeBlocks] = p; //add to free blocks
+		freeBlocks++;
+		return true;
 	}
 
 	return false;
 }
 
-bool MemoryPool::isFull()
+bool MemoryPool::IsFull()
 {
-	return memUsed == poolSize; //true if full
+	return !freeBlocks;
+}
+
+int MemoryPool::GetMemUsed()
+{
+	return (numberOfChunks - freeBlocks) * chunkSize;
 }

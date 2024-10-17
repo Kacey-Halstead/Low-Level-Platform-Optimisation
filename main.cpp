@@ -51,12 +51,11 @@ inline ColliderObject* CreateObj(bool isBox)
     if (isBox)
     {
         object = new Box;
-        object->typeName = "Box";
+        object->isBox = true;
     }
     else
     {
         object = new Sphere;
-        object->typeName = "Sphere";
     }
 
     // Assign random x, y, and z positions within specified ranges
@@ -319,7 +318,7 @@ void keyboard(unsigned char key, int x, int y) {
 
     case 'r': //remove box
     {
-        if (colliders.size() <= 0 || colliders.front()->typeName != "Box") break;
+        if (colliders.size() <= 0 || !colliders.front()->isBox) break;
         Box* box = (Box*)colliders.front();
         delete box;
         colliders.pop_front();
@@ -343,7 +342,7 @@ void keyboard(unsigned char key, int x, int y) {
 
     case 'R': //remove sphere
     {
-        if (colliders.size() <= 0 || colliders.back()->typeName != "Sphere") break;
+        if (colliders.size() <= 0 || colliders.back()->isBox) break;
         Sphere* sphere = (Sphere*)colliders.back();
         delete sphere;
         colliders.pop_back();
@@ -357,12 +356,12 @@ void keyboard(unsigned char key, int x, int y) {
         std::cout << "Sphere tracker: " << SphereTracker::GetTrackedAmount() << std::endl;
         std::cout << "Cube tracker: " << CubeTracker::GetTrackedAmount() << std::endl;
 
-        MemoryPool* bMemPool = MemoryAlloc::GetPool(0);
-        MemoryPool* mMemPool = MemoryAlloc::GetPool(1);
-        MemoryPool* sMemPool = MemoryAlloc::GetPool(2);
-        std::cout << "Total memory used in memory pool 1: " << bMemPool->memUsed << "/" << bMemPool->poolSize << std::endl;
-        std::cout << "Total memory used in memory pool 2: " << mMemPool->memUsed << "/" << mMemPool->poolSize << std::endl;
-        std::cout << "Total memory used in memory pool 3: " << sMemPool->memUsed << "/" << sMemPool->poolSize << std::endl;
+        for (int i = 0; i < 3; i++)
+        {
+            MemoryPool* pool = MemoryAlloc::GetPool(i);
+            std::cout << "Total memory used in memory pool "<< (i + 1) << "[" << (void*)pool << "]: " << pool->GetMemUsed() << "/" << pool->poolSize << ", number of chunks: " << pool->numberOfChunks << std::endl;
+
+        }
     }
         break;
     }

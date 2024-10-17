@@ -2,32 +2,26 @@
 #include <vector>
 #include <map>
 
-struct Pair
-{
-	void* memPtr;
-	bool isFree;
-};
-
 class MemoryPool
 {
 public:
-	MemoryPool(size_t iObjectSize, size_t eachChunkSize);
+	MemoryPool(int numChunks, size_t eachChunkSize);
 	~MemoryPool();
 
 	void* Alloc(size_t iSize);
 	bool Free(void* p);
 
-	bool isFull();
-
+	bool IsFull();
+	int GetMemUsed();
 
 	size_t chunkSize;
-	int memUsed = 0;
 	size_t poolSize;
+	int numberOfChunks;
 
 private:
-	Pair* pairArray;
-	void* pMem;
+	void* StartOfPoolPtr;
+	void** freeMemoryArr;
+	int freeBlocks;
 
-	int numberOfChunks;
 };
 

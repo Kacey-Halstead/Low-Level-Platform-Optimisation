@@ -19,7 +19,7 @@ namespace MemoryAlloc
 {
 	MemoryPool* GetPool(int index)
 	{
-		static std::array<MemoryPool, 3> pools = { MemoryPool(1000, 200), MemoryPool(750, 150), MemoryPool( 500,100) };
+		static std::array<MemoryPool, 3> pools = { MemoryPool(100, 200), MemoryPool(100, 100), MemoryPool(150,50)};
 		return &pools[index];
 	}
 
@@ -41,7 +41,7 @@ namespace MemoryAlloc
 
 			totalMemCount += header->size;
 
-			std::cout << std::endl << ++counter << ". Size: " << header->size;
+			std::cout << ++counter << ". Size: " << header->size;
 			std::cout << " | Tracker Type: " << header->tracker;
 
 			//check values
@@ -76,11 +76,11 @@ MemoryPool* GetPoolSize(size_t size)
 	MemoryPool* mediumPool = MemoryAlloc::GetPool(1);
 	MemoryPool* smallPool = MemoryAlloc::GetPool(2);
 
-	if (size <= smallPool->chunkSize && !smallPool->isFull())
+	if (size <= smallPool->chunkSize && !smallPool->IsFull())
 	{
 		return smallPool;
 	}
-	else if(size > smallPool->chunkSize && size <= mediumPool->chunkSize && !mediumPool->isFull())
+	else if(size <= mediumPool->chunkSize && !mediumPool->IsFull())
 	{
 		return mediumPool;
 	}

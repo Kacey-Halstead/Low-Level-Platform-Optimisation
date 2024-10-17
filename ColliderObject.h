@@ -14,7 +14,7 @@ public:
     Vec3 size;
     Vec3 velocity;
     Vec3 colour;
-    std::string typeName;
+    bool isBox = false;
 
     // if two colliders collide, push them away from each other
     void resolveCollision(ColliderObject* a, ColliderObject* b) {
