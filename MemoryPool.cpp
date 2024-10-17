@@ -10,6 +10,11 @@ MemoryPool::MemoryPool(size_t iObjectSize, size_t eachChunkSize)
 	if (pMem == nullptr) return;
 
 	pairArray = (Pair*)malloc(sizeof(Pair) * numberOfChunks);
+
+	void** freeMemory = (void**)malloc(sizeof(void*) * numberOfChunks);
+	int freeBlocks = numberOfChunks;
+	pMem <= ptr < pMem + poolSize // in the pool
+
 	if (pairArray == nullptr) return;
 
 	for (int i = 0; i < numberOfChunks; i++)
@@ -31,6 +36,7 @@ void* MemoryPool::Alloc(size_t iSize)
 
 		if (pairArray[i].isFree && iSize <= chunkSize) //if memory free and right size, return pointer to memory
 		{
+			memUsed += chunkSize;
 			pairArray[i].isFree = false;
 			return pairArray[i].memPtr;
 		}
@@ -45,10 +51,16 @@ bool MemoryPool::Free(void* p)
 	{
 		if (pairArray[i].memPtr == p)
 		{
+			memUsed -= chunkSize;
 			pairArray[i].isFree = true;
 			return true;
 		}
 	}
 
 	return false;
+}
+
+bool MemoryPool::isFull()
+{
+	return memUsed == poolSize; //true if full
 }

@@ -1,5 +1,4 @@
 #include "MemoryAllocation.h"
-#include "MemoryPool.h"
 #include <array>
 
 struct Header
@@ -77,11 +76,11 @@ MemoryPool* GetPoolSize(size_t size)
 	MemoryPool* mediumPool = MemoryAlloc::GetPool(1);
 	MemoryPool* smallPool = MemoryAlloc::GetPool(2);
 
-	if (size <= smallPool->chunkSize)
+	if (size <= smallPool->chunkSize && !smallPool->isFull())
 	{
 		return smallPool;
 	}
-	else if(size > smallPool->chunkSize && size <= mediumPool->chunkSize)
+	else if(size > smallPool->chunkSize && size <= mediumPool->chunkSize && !mediumPool->isFull())
 	{
 		return mediumPool;
 	}
@@ -198,10 +197,11 @@ void operator delete (void * pMem)
 		break;
 	}
 
-	int size = sizeof(Header) + pHeader->size + sizeof(Footer);
-	MemoryPool* pool = GetPoolSize(size);
+	MemoryPool* bPool = MemoryAlloc::GetPool(0);
+	MemoryPool* mPool = MemoryAlloc::GetPool(1);
+	MemoryPool* sPool = MemoryAlloc::GetPool(2);
 
-	if (!pool->Free(pHeader)) //if not work
+	if (!bPool->Free(pHeader) && !mPool->Free(pHeader) && !sPool->Free(pHeader)) //if not work
 	{
 		free(pHeader);
 	}

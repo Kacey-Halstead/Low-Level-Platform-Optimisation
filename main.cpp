@@ -13,6 +13,7 @@
 #include "Box.h"
 #include "Sphere.h"
 #include "MemoryAllocation.h"
+#include "MemoryPool.h"
 #include "StaticClass.h"
 #include "Tracker.h"
 #include "Timer.h"
@@ -351,9 +352,19 @@ void keyboard(unsigned char key, int x, int y) {
         break;
 
     case 'm':
+    {
         std::cout << "\nDefault tracker: " << Tracker::GetTrackedAmount() << std::endl;
         std::cout << "Sphere tracker: " << SphereTracker::GetTrackedAmount() << std::endl;
         std::cout << "Cube tracker: " << CubeTracker::GetTrackedAmount() << std::endl;
+
+        MemoryPool* bMemPool = MemoryAlloc::GetPool(0);
+        MemoryPool* mMemPool = MemoryAlloc::GetPool(1);
+        MemoryPool* sMemPool = MemoryAlloc::GetPool(2);
+        std::cout << "Total memory used in memory pool 1: " << bMemPool->memUsed << "/" << bMemPool->poolSize << std::endl;
+        std::cout << "Total memory used in memory pool 2: " << mMemPool->memUsed << "/" << mMemPool->poolSize << std::endl;
+        std::cout << "Total memory used in memory pool 3: " << sMemPool->memUsed << "/" << sMemPool->poolSize << std::endl;
+    }
+        break;
     }
 }
 

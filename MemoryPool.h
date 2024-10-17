@@ -17,12 +17,16 @@ public:
 	void* Alloc(size_t iSize);
 	bool Free(void* p);
 
+	bool isFull();
+
+
 	size_t chunkSize;
+	int memUsed = 0;
+	size_t poolSize;
 
 private:
 	Pair* pairArray;
 	void* pMem;
-	size_t poolSize;
 
 	int numberOfChunks;
 };
