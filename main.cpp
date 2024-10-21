@@ -2,7 +2,6 @@
 #include <GL/glut.h>
 #include <list>
 #include <iostream>
-
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
@@ -35,10 +34,7 @@ using namespace std::chrono;
 #define LOOKDIR_Y 0
 #define LOOKDIR_Z 0
 
-
 std::list<ColliderObject*> colliders;
-
-
 
 float GenerateRandom(float toDivide)
 {
