@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 enum Types
 {
@@ -9,30 +10,11 @@ enum Types
 
 namespace Tracker
 {
-	int GetTrackedAmount();
+	int GetTrackedAmount(Types type);
 
-	void AddBytesAllocated(int numOfBytes);
+	std::string GetName(Types type);
 
-	void RemoveBytesAllocated(int numOfBytes);
+	void AddBytesAllocated(int numOfBytes, Types type);
+
+	void RemoveBytesAllocated(int numOfBytes, Types type);
 };
-
-namespace CubeTracker 
-{
-
-	int GetTrackedAmount();
-
-	void AddBytesAllocated(int numOfBytes);
-
-	void RemoveBytesAllocated(int numOfBytes);
-};
-
-namespace SphereTracker
-{
-	int GetTrackedAmount();
-
-	void AddBytesAllocated(int numOfBytes);
-
-	void RemoveBytesAllocated(int numOfBytes);
-};
-
-

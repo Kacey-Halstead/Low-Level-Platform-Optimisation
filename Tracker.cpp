@@ -2,60 +2,75 @@
 
 namespace Tracker
 {
-	int trackedAmount = 0;
+	int DefaulttrackedAmount = 0;
+	int CubetrackedAmount = 0;
+	int SpheretrackedAmount = 0;
 
-	int GetTrackedAmount()
+	int GetTrackedAmount(Types type)
 	{
-		return trackedAmount;
+		switch (type)
+		{
+		case DEFAULT:
+			return DefaulttrackedAmount;
+			break;
+		case CUBE:
+			return CubetrackedAmount;
+			break;
+		case SPHERE:
+			return SpheretrackedAmount;
+			break;
+		}
+
+		return 0;
 	}
 
-	void AddBytesAllocated(int numOfBytes)
+	std::string GetName(Types type)
 	{
-		trackedAmount += numOfBytes;
+		switch (type)
+		{
+		case DEFAULT:
+			return "Default";
+			break;
+		case CUBE:
+			return "Cube";
+			break;
+		case SPHERE:
+			return "Sphere";
+			break;
+		}
+
+		return std::string();
 	}
 
-	void RemoveBytesAllocated(int numOfBytes)
+	void AddBytesAllocated(int numOfBytes, Types type)
 	{
-		trackedAmount -= numOfBytes;
-	}
-};
-
-namespace CubeTracker
-{
-	int trackedAmount = 0;
-
-	int GetTrackedAmount()
-	{
-		return trackedAmount;
-	}
-
-	void AddBytesAllocated(int numOfBytes)
-	{
-		trackedAmount += numOfBytes;
+		switch (type)
+		{
+		case DEFAULT:
+			DefaulttrackedAmount += numOfBytes;
+			break;
+		case CUBE:
+			CubetrackedAmount += numOfBytes;
+			break;
+		case SPHERE:
+			SpheretrackedAmount += numOfBytes;
+			break;
+		}
 	}
 
-	void RemoveBytesAllocated(int numOfBytes)
+	void RemoveBytesAllocated(int numOfBytes, Types type)
 	{
-		trackedAmount -= numOfBytes;
-	}
-};
-
-namespace SphereTracker
-{
-	int trackedAmount = 0;
-
-	int GetTrackedAmount()
-	{
-		return trackedAmount;
-	}
-
-	void AddBytesAllocated(int numOfBytes)
-	{
-		trackedAmount += numOfBytes;
-	}
-
-	void RemoveBytesAllocated(int numOfBytes)
-	{
-		trackedAmount -= numOfBytes;
+		switch (type)
+		{
+		case DEFAULT:
+			DefaulttrackedAmount -= numOfBytes;
+			break;
+		case CUBE:
+			CubetrackedAmount -= numOfBytes;
+			break;
+		case SPHERE:
+			SpheretrackedAmount -= numOfBytes;
+			break;
+		}
 	}
 };

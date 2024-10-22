@@ -42,7 +42,7 @@ namespace MemoryAlloc
 			totalMemCount += header->size;
 
 			std::cout << ++counter << ". Size: " << header->size;
-			std::cout << " | Tracker Type: " << header->tracker;
+			std::cout << " | Tracker Type: " << Tracker::GetName(header->tracker);
 
 			//check values
 			if (footer->checkValueF != MemoryAlloc::footerCheckValue)
@@ -58,7 +58,6 @@ namespace MemoryAlloc
 			std::cout << std::endl;
 
 			header = header->next; //set header to next header in list
-
 		}
 		std::cout << "\nTotal memory used on heap: " << totalMemCount << std::endl;
 	}
@@ -122,22 +121,7 @@ void* operator new (size_t size, Types pTracker)
 
 	MemoryAlloc::lastHeader = pHeader; //Set this header to new previous header
 		
-	switch (pTracker)
-	{
-	case DEFAULT:
-		Tracker::AddBytesAllocated(size);
-		break;
-
-	case CUBE:
-		CubeTracker::AddBytesAllocated(size);
-		break;
-
-	case SPHERE:
-		SphereTracker::AddBytesAllocated(size);
-		break;
-	default:
-		break;
-	}
+	Tracker::AddBytesAllocated(size, pTracker);
 
 	return pMem + sizeof(Header);
 }
@@ -180,22 +164,7 @@ void operator delete (void * pMem)
 		MemoryAlloc::lastHeader = prev;
 	}
 
-	switch (pHeader->tracker)
-	{
-	case DEFAULT:
-		Tracker::RemoveBytesAllocated(pHeader->size);
-		break;
-
-	case CUBE:
-		CubeTracker::RemoveBytesAllocated(pHeader->size);
-		break;
-
-	case SPHERE:
-		SphereTracker::RemoveBytesAllocated(pHeader->size);
-		break;
-	default:
-		break;
-	}
+	Tracker::RemoveBytesAllocated(pHeader->size, pHeader->tracker);
 
 	MemoryPool* bPool = MemoryAlloc::GetPool(0);
 	MemoryPool* mPool = MemoryAlloc::GetPool(1);

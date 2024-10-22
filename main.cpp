@@ -16,6 +16,7 @@
 #include "StaticClass.h"
 #include "Tracker.h"
 #include "Timer.h"
+#include "OctTree.h"
 
 
 using namespace std::chrono;
@@ -79,7 +80,11 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
         colliders.emplace_back(CreateObj(false));
     }
 
+    OctTree* root = new OctTree(Vec3(0, 0, 0) , 20, 2);
+    std::cout << "Num Oct trees: " << OctTreeTracker::ReturnCounter() << std::endl;
+
     Timer::EndTimer();
+
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
@@ -141,6 +146,7 @@ Vec3 screenToWorld(int x, int y) {
 // update the physics: gravity, collision test, collision resolution
 void updatePhysics(const float deltaTime) {
     
+
     // todo for the assessment - use a thread for each sub region
     // for example, assuming we have two regions:
     // from 'colliders' create two separate lists
@@ -277,6 +283,7 @@ void mouse(int button, int state, int x, int y) {
 // called when the keyboard is used
 void keyboard(unsigned char key, int x, int y) {
     const float impulseMagnitude = 20.0f; // Upward impulse magnitude  
+    int* memory = nullptr;
 
     switch (key)
     {
@@ -286,15 +293,11 @@ void keyboard(unsigned char key, int x, int y) {
         }
         break;
 
-    case '1':
-        std::cout << "Memory used" << std::endl;
-        break;
-
     case 'w':
         MemoryAlloc::WalkTheHeap();
         break;
 
-    case 'f':
+    case 'f': //enforce footer buffer overflow
     {
         char* Footername = new char[10];
         const char* toCopy = "aaaaaaaaaaaaaa";
@@ -303,7 +306,7 @@ void keyboard(unsigned char key, int x, int y) {
     }
         break;
 
-    case 'h':
+    case 'h': //enforce header overflow
     {
         char* Headername = new char[10];
         const char* toCopy = "aaaaaaaaaaaaaa";
@@ -346,11 +349,11 @@ void keyboard(unsigned char key, int x, int y) {
     }
         break;
 
-    case 'm':
+    case 'm': //print out memory info
     {
-        std::cout << "\nDefault tracker: " << Tracker::GetTrackedAmount() << std::endl;
-        std::cout << "Sphere tracker: " << SphereTracker::GetTrackedAmount() << std::endl;
-        std::cout << "Cube tracker: " << CubeTracker::GetTrackedAmount() << std::endl;
+        std::cout << "\nDefault tracker: " << Tracker::GetTrackedAmount(DEFAULT) << std::endl;
+        std::cout << "Sphere tracker: " << Tracker::GetTrackedAmount(CUBE) << std::endl;
+        std::cout << "Cube tracker: " << Tracker::GetTrackedAmount(SPHERE) << std::endl;
 
         for (int i = 0; i < 3; i++)
         {
@@ -359,6 +362,14 @@ void keyboard(unsigned char key, int x, int y) {
 
         }
     }
+        break;
+
+    case 't': //allocate memory
+
+        break;
+
+    case 'u': //deallocate memory
+
         break;
     }
 }
