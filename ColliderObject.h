@@ -2,6 +2,7 @@
 
 #include "Vec3.h"
 #include <list>
+#include<vector>
 #include <GL/glut.h>
 #include <string>
 #include "globals.h"
@@ -73,7 +74,7 @@ public:
 
     virtual void drawMesh() {};
 
-    void update(std::list<ColliderObject*>* colliders, const float& deltaTime)
+    void update(std::vector<ColliderObject*> colliders, const float& deltaTime)
     {
         const float floorY = 0.0f;
         // Update velocity due to gravity
@@ -100,7 +101,7 @@ public:
         }
 
         // Check for collisions with other colliders
-        for (ColliderObject* other : *colliders) {
+        for (ColliderObject* other : colliders) {
             if (this == other) continue;
             if (checkCollision(this, other)) {
                 resolveCollision(this, other);

@@ -35,7 +35,12 @@ using namespace std::chrono;
 #define LOOKDIR_Y 0
 #define LOOKDIR_Z 0
 
-std::list<ColliderObject*> colliders;
+//OcTree divisions
+#define OCTREE_DIVISIONS 2
+
+std::vector<ColliderObject*> colliders;
+std::vector<OctTree*> children;
+OctTree* root;
 
 float GenerateRandom(float toDivide)
 {
@@ -80,11 +85,11 @@ void initScene(const int &boxCount, const int &sphereCount) { //const refs becau
         colliders.emplace_back(CreateObj(false));
     }
 
-    OctTree* root = new OctTree(Vec3(0, 0, 0) , 20, 2);
+    //root of Octree
+    root = new OctTree(Vec3((maxX - minX)/2, 0, (maxZ - minZ)/2) , 50, OCTREE_DIVISIONS);
     std::cout << "Num Oct trees: " << OctTreeTracker::ReturnCounter() << std::endl;
 
     Timer::EndTimer();
-
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
@@ -140,12 +145,25 @@ Vec3 screenToWorld(int x, int y) {
     return Vec3((float)posX, (float)posY, (float)posZ);
 }
 
-
-
-
 // update the physics: gravity, collision test, collision resolution
 void updatePhysics(const float deltaTime) {
-    
+   
+    root->ClearObjects();
+
+    for (ColliderObject* CO : colliders) //for every object
+    {
+        root->InsertObject(root, CO);
+    }
+
+
+    //for (OctTree* oct : root->GetLeafNodes(root)) //for every leaf node
+    //{
+    //    if (oct->objects.empty()) continue;
+    //    for (ColliderObject* Obj : oct->objects) //for every object in region
+    //    {
+    //        Obj->update(oct->objects, deltaTime); //pass through other objects in region
+    //    }
+    //}
 
     // todo for the assessment - use a thread for each sub region
     // for example, assuming we have two regions:
@@ -154,9 +172,8 @@ void updatePhysics(const float deltaTime) {
     //  and add the pointer to that region's list.
     // Then, run two threads with the code below (changing 'colliders' to be the region's list)
 
-    for (ColliderObject* box : colliders) { 
-        
-        box->update(&colliders, deltaTime);
+    for (ColliderObject* box : colliders) {      
+        //box->update(colliders, deltaTime);
         
     }
 }
@@ -171,8 +188,6 @@ void drawQuad(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& v4) {
     glVertex3f(v4.x, v4.y, v4.z);
     glEnd();
 }
-
-
 
 // draw the entire scene
 void drawScene() {
@@ -275,7 +290,7 @@ void mouse(int button, int state, int x, int y) {
 
         // Remove the clicked box if any
         if (clickedBoxOK != false) {
-            colliders.remove(clickedBox);
+            //colliders.erase(clickedBox);
         }
     }
 }
@@ -320,14 +335,14 @@ void keyboard(unsigned char key, int x, int y) {
         if (colliders.size() <= 0 || !colliders.front()->isBox) break;
         Box* box = (Box*)colliders.front();
         delete box;
-        colliders.pop_front();
+        //colliders.pop_front();
         std::cout << "\nRemoved box" << std::endl;
     }
         break;
 
     case 'a': //add box
     {
-        colliders.emplace_front(CreateObj(true));
+        //colliders.emplace_front(CreateObj(true));
         std::cout << "\nAdded box" << std::endl;
     }
         break;
