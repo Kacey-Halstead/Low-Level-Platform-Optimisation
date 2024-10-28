@@ -17,6 +17,8 @@ public:
     Vec3 colour;
     bool isBox = false;
 
+    ColliderObject* next = nullptr;
+
     // if two colliders collide, push them away from each other
     void resolveCollision(ColliderObject* a, ColliderObject* b) {
         Vec3 normal = { a->position.x - b->position.x, a->position.y - b->position.y, a->position.z - b->position.z };
@@ -74,7 +76,7 @@ public:
 
     virtual void drawMesh() {};
 
-    void update(std::vector<ColliderObject*> colliders, const float& deltaTime)
+    void update(const float& deltaTime)
     {
         const float floorY = 0.0f;
         // Update velocity due to gravity
@@ -99,14 +101,12 @@ public:
         if (position.z - size.z / 2.0f < minZ || position.z + size.z / 2.0f > maxZ) {
             velocity.z = -velocity.z;
         }
+    }
 
-        // Check for collisions with other colliders
-        for (ColliderObject* other : colliders) {
-            if (this == other) continue;
-            if (checkCollision(this, other)) {
-                resolveCollision(this, other);
-                break;
-            }
+    void TestCollision(ColliderObject* other)
+    {
+        if (checkCollision(this, other)) {
+            resolveCollision(this, other);
         }
     }
 };

@@ -2,143 +2,121 @@
 #include <iostream>
 #include <cmath>
 
-namespace OctTreeTracker
-{
-	int counter = 0;
-
-	int ReturnCounter()
-	{
-		return counter;
-	}
-
-	void AddCounter()
-	{
-		counter++;
-	}
-
-};
-
-OctTree::OctTree(Vec3 center, float halfSize, int numDivisions)
+OctTree::OctTree(Vec3 center, float halfSize, int maxRows)
 {
 	octcenter = center;
 	octHalfSize = halfSize;
-
-	if (numDivisions > 1)
+	if (maxRows > 1)
 	{
-		CreateChildren(center, halfSize / 2, numDivisions - 1);
+		CreateChildren(maxRows-1);
 	}
-	OctTreeTracker::AddCounter();
-	CalculateBounds();
 }
 
 OctTree::~OctTree()
 {
-	if (children[0] != nullptr)
-	{
-		for (int i = 0; i < 8; i++)
-		{
-			delete children[i];
-		}
-	}
+
 }
 
-bool OctTree::isInBounds(Vec3 pos)
+void OctTree::InsertObject(ColliderObject* obj)
 {
-	if (!(bounds[0] < pos.x < bounds[1]))
+	int index = GetIndex(obj); //gets index of child its in
+
+	if (children[index] != nullptr) //if has child, recurse 
 	{
-		return false;
+		children[index]->InsertObject(obj);
 	}
-
-	if (!(bounds[2] < pos.z < bounds[3]))
+	else //if leaf node, add object to linked list
 	{
-		return false;
-	}
-
-	if (!(bounds[4] < pos.y < bounds[5]))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-void OctTree::InsertObject(OctTree* treeNode, ColliderObject* obj)
-{
-	if (children[0] == nullptr) return;
-
-	if (isLeaf)
-	{
-		objects.emplace_back(obj);
-	}
-	else
-	{
-		for (int i = 0; i < 8; i++)
-		{
-			InsertObject(treeNode->children[i], obj);
-		}
+		obj->next = start;
+		start = obj;
 	}
 }
 
 void OctTree::ClearObjects()
 {
-	objects.clear();
+	start = nullptr;
 
-	if (children[0] != nullptr)
-	{
-		for (OctTree* child : children)
-		{
-			child->ClearObjects();
-		}
-	}
-}
-
-std::vector<OctTree*> OctTree::GetLeafNodes(OctTree* oct)
-{
-	std::vector<OctTree*> leafNodes;
-
-	if (isLeaf)
-	{
-		leafNodes.emplace_back(this);
-	}
-	else
-	{
-		for (int i = 0; i < 8; i++)
-		{
-			GetLeafNodes(oct->children[i]);
-		}
-	}
-
-	return leafNodes;
-}
-
-void OctTree::CreateChildren(Vec3 center, float halfSize, int numDivisions)
-{
-	children[0] = new OctTree(center + Vec3(-halfSize, -halfSize, halfSize), halfSize, numDivisions); //back left (top)
-	children[1] = new OctTree(center + Vec3(halfSize, -halfSize, halfSize), halfSize, numDivisions); //back right (top)
-	children[2] = new OctTree(center + Vec3(-halfSize, halfSize, halfSize), halfSize, numDivisions); //front left (top)
-	children[3] = new OctTree(center + Vec3(halfSize, halfSize, halfSize), halfSize, numDivisions); //front right (top)
-	children[4] = new OctTree(center + Vec3(-halfSize, -halfSize, -halfSize), halfSize, numDivisions); //back left (bottom)
-	children[5] = new OctTree(center + Vec3(halfSize, -halfSize, -halfSize), halfSize, numDivisions); //back right (bottom)
-	children[6] = new OctTree(center + Vec3(-halfSize, halfSize, -halfSize), halfSize, numDivisions); //front left (bottom)
-	children[7] = new OctTree(center + Vec3(halfSize, halfSize, -halfSize), halfSize, numDivisions); //front right (bottom)
+	if (children[0] == nullptr) return;
 
 	for (int i = 0; i < 8; i++)
 	{
-		children[i]->parent = this;
+		children[i]->ClearObjects();
+	}
+}
 
-		if (numDivisions == 1)
+void OctTree::ResolveCollisions()
+{
+	ColliderObject* curr = start;
+
+	while (curr != nullptr) //gets object in linked list
+	{
+		ColliderObject* nextObj = curr->next;
+		while (nextObj != nullptr) //checks object against every other object in linked list
 		{
-			children[i]->isLeaf = true;
+			if (curr == nextObj) continue;
+			curr->TestCollision(nextObj);
+			nextObj = nextObj->next;
+		}
+		curr = curr->next;
+	}
+
+	if (children[0] != nullptr) //if has child, recurse 
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			children[i]->ResolveCollisions();
 		}
 	}
 }
 
-void OctTree::CalculateBounds()
+void OctTree::CreateChildren(int maxRows)
 {
-	bounds[0] = octcenter.x - octHalfSize; //left side
-	bounds[1] = octcenter.x + octHalfSize; //right side
-	bounds[2] = octcenter.z - octHalfSize; //back
-	bounds[3] = octcenter.z + octHalfSize; //front
-	bounds[4] = octcenter.y - octHalfSize; //bottom
-	bounds[5] = octcenter.y + octHalfSize; //top
+	float halfSize = octHalfSize / 2;
+
+	for (int i = 0; i < 8; i++) //creates all 8 children
+	{
+		Vec3 offset = Vec3(-halfSize, -halfSize, -halfSize);
+		if (i % 2 != 0) // if even, its + halfsize, else - halfsize
+		{
+			offset.x = halfSize;
+		}
+		if (i == 2 || i == 3 || i == 6 || i == 7) //if these values, + y
+		{
+			offset.y = halfSize;
+		}
+		if (i > 3) //if above 3, + halfsize on z
+		{
+			offset.z = halfSize;
+		}
+		children[i] = new OctTree(octcenter + offset, halfSize, maxRows); //creates correct offset for different children
+		children[i]->parent = this;
+	}
+
+	//children[0] = back left (bottom)
+	//children[1] = back right (bottom)
+	//children[2] = front left (bottom)
+	//children[3] = front right (bottom)
+	//children[4] = back left (top)
+	//children[5] = back right (top)
+	//children[6] = front left (top)
+	//children[7] = front right (top)
+}
+
+int OctTree::GetIndex(ColliderObject* obj)
+{
+	int index = 0; //adds 1, 2, or 4 depending if  > or < than centre
+	if (obj->position.x > octcenter.x)
+	{
+		index += 1;
+	}
+	if (obj->position.y > octcenter.y)
+	{
+		index += 2;
+	}
+	if (obj->position.z > octcenter.z)
+	{
+		index += 4;
+	}
+
+	return index;
 }

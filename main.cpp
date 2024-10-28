@@ -36,10 +36,9 @@ using namespace std::chrono;
 #define LOOKDIR_Z 0
 
 //OcTree divisions
-#define OCTREE_DIVISIONS 2
+#define OCTREE_ROW_COUNT 2
 
 std::vector<ColliderObject*> colliders;
-std::vector<OctTree*> children;
 OctTree* root;
 
 float GenerateRandom(float toDivide)
@@ -74,20 +73,24 @@ inline ColliderObject* CreateObj(bool isBox)
 }
 
 
-void initScene(const int &boxCount, const int &sphereCount) { //const refs because values do not need to be changed 
+void initScene(const int& boxCount, const int& sphereCount) { //const refs because values do not need to be changed 
     Timer::StartTimer();
 
-    for (int i = boxCount; i--;) { //faster to check if = 0, quicker than i < boxCount
+    for (int i = boxCount; i > 0; i--) { //faster to check if = 0, quicker than i < boxCount
         colliders.emplace_back(CreateObj(true));
     }
 
-    for (int i = sphereCount; i--;) {
+    for (int i = sphereCount; i > 0; i--) {
         colliders.emplace_back(CreateObj(false));
     }
 
     //root of Octree
-    root = new OctTree(Vec3((maxX - minX)/2, 0, (maxZ - minZ)/2) , 50, OCTREE_DIVISIONS);
-    std::cout << "Num Oct trees: " << OctTreeTracker::ReturnCounter() << std::endl;
+    float XExtent = (maxX - minX) / 2;
+    float biggestExtent = XExtent;
+    float ZExtent = (maxZ - minZ) / 2;
+    if (ZExtent > biggestExtent) biggestExtent = ZExtent;
+
+    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT);
 
     Timer::EndTimer();
 }
@@ -147,23 +150,17 @@ Vec3 screenToWorld(int x, int y) {
 
 // update the physics: gravity, collision test, collision resolution
 void updatePhysics(const float deltaTime) {
-   
+
     root->ClearObjects();
 
-    for (ColliderObject* CO : colliders) //for every object
+    for (ColliderObject* obj : colliders)
     {
-        root->InsertObject(root, CO);
+        obj->update(deltaTime);
+        root->InsertObject(obj);
     }
 
+    root->ResolveCollisions();
 
-    //for (OctTree* oct : root->GetLeafNodes(root)) //for every leaf node
-    //{
-    //    if (oct->objects.empty()) continue;
-    //    for (ColliderObject* Obj : oct->objects) //for every object in region
-    //    {
-    //        Obj->update(oct->objects, deltaTime); //pass through other objects in region
-    //    }
-    //}
 
     // todo for the assessment - use a thread for each sub region
     // for example, assuming we have two regions:
@@ -171,11 +168,6 @@ void updatePhysics(const float deltaTime) {
     // empty each list (from previous frame) and work out which collidable object is in which region, 
     //  and add the pointer to that region's list.
     // Then, run two threads with the code below (changing 'colliders' to be the region's list)
-
-    for (ColliderObject* box : colliders) {      
-        //box->update(colliders, deltaTime);
-        
-    }
 }
 
 // draw the sides of the containing area

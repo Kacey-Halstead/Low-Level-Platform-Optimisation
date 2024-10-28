@@ -83,9 +83,13 @@ MemoryPool* GetPoolSize(size_t size)
 	{
 		return mediumPool;
 	}
-	else
+	else if(size <= biggestPool->chunkSize && !biggestPool->IsFull())
 	{
 		return biggestPool;
+	}
+	else
+	{
+		return nullptr;
 	}
 }
 
@@ -93,8 +97,13 @@ void* operator new (size_t size, Types pTracker)
 {
 	size_t nRequestedBytes = size + sizeof(Header) + sizeof(Footer); //total = requested size + header + footer
 
-	char* pMem = (char*)GetPoolSize(nRequestedBytes)->Alloc(nRequestedBytes);
-	if(pMem == nullptr) //if no room in memory pool
+	char* pMem = nullptr;
+	MemoryPool* pool = GetPoolSize(nRequestedBytes);
+	if (pool != nullptr)
+	{
+		pMem = (char*)pool->Alloc(nRequestedBytes);
+	}
+	if(pMem == nullptr) //if no room in memory pool or no pool big enough
 	{
 		pMem = (char*)malloc(nRequestedBytes); //allocate
 	}
