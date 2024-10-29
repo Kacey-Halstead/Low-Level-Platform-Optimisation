@@ -19,6 +19,10 @@ public:
         return Vec3(x + other.x, y + other.y, z + other.z);
     }
 
+    Vec3 operator/(const float& other) const {
+        return Vec3(x / other, y / other, z / other);
+    }
+
     bool operator>(const float& other) const {
         return (x > other, y > other, z > other);
     }

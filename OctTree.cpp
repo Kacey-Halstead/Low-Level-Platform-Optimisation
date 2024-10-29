@@ -21,14 +21,14 @@ void OctTree::InsertObject(ColliderObject* obj)
 {
 	int index = GetIndex(obj); //gets index of child its in
 
-	if (children[index] != nullptr) //if has child, recurse 
-	{
-		children[index]->InsertObject(obj);
-	}
-	else //if leaf node, add object to linked list
+	if (index == 8 || children[index] == nullptr)
 	{
 		obj->next = start;
 		start = obj;
+	}
+	else
+	{
+		children[index]->InsertObject(obj);
 	}
 }
 
@@ -46,18 +46,38 @@ void OctTree::ClearObjects()
 
 void OctTree::ResolveCollisions()
 {
-	ColliderObject* curr = start;
+	const int MAXDEPTH = 5;
+	static OctTree* ancestorStack[MAXDEPTH];
+	static int depth = 0;
 
-	while (curr != nullptr) //gets object in linked list
+	ancestorStack[depth++] = this;
+
+	//must check against others in linked list and ancestor stack
+
+	for (int i = 0; i < depth; i++) //for everything in ancestor stack
 	{
-		ColliderObject* nextObj = curr->next;
-		while (nextObj != nullptr) //checks object against every other object in linked list
+		ColliderObject* curr = ancestorStack[i]->start; //start of ancestor stack
+
+		while (curr != nullptr)
 		{
-			if (curr == nextObj) continue;
-			curr->TestCollision(nextObj);
-			nextObj = nextObj->next;
+			//check against others in ancestor stack
+			ColliderObject* nextObj;
+			nextObj = curr->next;
+			while (nextObj != nullptr)
+			{
+				curr->TestCollision(nextObj);
+				nextObj = nextObj->next;
+			}
+
+			//checks against normal linked list
+			nextObj = start;
+			while (nextObj != nullptr)
+			{
+				curr->TestCollision(nextObj);
+				nextObj = nextObj->next;
+			}
+			curr = curr->next;
 		}
-		curr = curr->next;
 	}
 
 	if (children[0] != nullptr) //if has child, recurse 
@@ -67,6 +87,8 @@ void OctTree::ResolveCollisions()
 			children[i]->ResolveCollisions();
 		}
 	}
+
+	depth--;
 }
 
 void OctTree::CreateChildren(int maxRows)
@@ -105,6 +127,18 @@ void OctTree::CreateChildren(int maxRows)
 int OctTree::GetIndex(ColliderObject* obj)
 {
 	int index = 0; //adds 1, 2, or 4 depending if  > or < than centre
+
+	if (obj->position.x + obj->size.x > octcenter.x && obj->position.x - obj->size.x < octcenter.x) //check for straddling
+	{
+		return 8;
+	}
+
+	if (obj->position.z + obj->size.z > octcenter.z && obj->position.z - obj->size.z < octcenter.z) //check for straddling
+	{
+		return 8;
+	}
+
+
 	if (obj->position.x > octcenter.x)
 	{
 		index += 1;
@@ -117,6 +151,8 @@ int OctTree::GetIndex(ColliderObject* obj)
 	{
 		index += 4;
 	}
+
+
 
 	return index;
 }
