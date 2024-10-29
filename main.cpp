@@ -74,7 +74,7 @@ inline ColliderObject* CreateObj(bool isBox)
 
 
 void initScene(const int& boxCount, const int& sphereCount) { //const refs because values do not need to be changed 
-    Timer::StartTimer();
+
 
     for (int i = boxCount; i > 0; i--) { //faster to check if = 0, quicker than i < boxCount
         colliders.emplace_back(CreateObj(true));
@@ -92,7 +92,7 @@ void initScene(const int& boxCount, const int& sphereCount) { //const refs becau
 
     root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT);
 
-    Timer::EndTimer();
+
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
@@ -150,7 +150,6 @@ Vec3 screenToWorld(int x, int y) {
 
 // update the physics: gravity, collision test, collision resolution
 void updatePhysics(const float deltaTime) {
-
     root->ClearObjects();
 
     for (ColliderObject* obj : colliders)
@@ -160,7 +159,6 @@ void updatePhysics(const float deltaTime) {
     }
 
     root->ResolveCollisions();
-
 
     // todo for the assessment - use a thread for each sub region
     // for example, assuming we have two regions:
@@ -239,6 +237,7 @@ void idle() {
     last = steady_clock::now();
     const duration<float> frameTime = last - old;
     float deltaTime = frameTime.count();
+    std::cout << "FPS: " << (1 / deltaTime) << std::endl;
 
     updatePhysics(deltaTime);
 
@@ -407,5 +406,6 @@ int main(int argc, char** argv) {
 
     // it will stick here until the program ends. 
     glutMainLoop();
+
     return 0;
 }
