@@ -23,13 +23,15 @@ public:
 	ColliderObject* start = nullptr;
 	OctTree* parent = nullptr;
 	std::array<OctTree*, 8> children;
+	std::vector<std::thread> threads;
+	std::thread thisThread;
 
 private:
-
 	void CreateChildren();
 	int GetIndex(ColliderObject* obj);
 	int GetNumObjects();
 
+	int objectCounter = 0;
 	int numRows = 0;
 	bool dynExp = false;
 	Vec3 octcenter;

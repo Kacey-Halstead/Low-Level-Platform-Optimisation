@@ -44,8 +44,13 @@ void OctTree::InsertObject(ColliderObject* obj)
 	{
 		if (children[0] == nullptr) //is leaf
 		{
-			if (GetNumObjects() < MAX_OBJECTS)
+			if (objectCounter < MAX_OBJECTS)
 			{
+				if (index != 8)
+				{
+					objectCounter++;
+				}
+
 				obj->next = start;
 				start = obj;
 				return;
@@ -53,6 +58,13 @@ void OctTree::InsertObject(ColliderObject* obj)
 			else //if exceeds maxobj count, create children and insert
 			{
 				CreateChildren();
+				ColliderObject* object = start;
+				start = nullptr;
+				while (object != nullptr)
+				{
+					InsertObject(object);
+					object = object->next;
+				}
 			}
 		}
 
@@ -109,33 +121,42 @@ void OctTree::ResolveCollisions()
 		while (curr != nullptr)
 		{
 			//check against others in ancestor stack
-			ColliderObject* nextObj;
-			nextObj = curr->next;
+			ColliderObject* nextObj = start;
 			while (nextObj != nullptr)
 			{
-				curr->TestCollision(nextObj);
+				if (nextObj != curr)
+				{
+					curr->TestCollision(nextObj);
+				}
+
 				nextObj = nextObj->next;
 			}
 
-			//checks against normal linked list
-			nextObj = start;
-			while (nextObj != nullptr)
-			{
-				curr->TestCollision(nextObj);
-				nextObj = nextObj->next;
-			}
 			curr = curr->next;
 		}
 	}
 
-	//thread for every sub region - 1 thread per child
+	//auto threadVec = std::vector<std::thread>{};
 
 	if (children[0] != nullptr) //if has child, recurse 
 	{
 		for (int i = 0; i < 8; i++)
 		{
 			children[i]->ResolveCollisions();
+			//std::thread myThread(ResolveCollisions);
+			//std::thread myThread(ResolveCollisions);
+			//std::thread thread2(ResolveCollisions);
+
+			//threadVec.emplace_back(thread2);
+
+			//threadVec.emplace_back([&] {
+				//children[i]->ResolveCollisions(); });
 		}
+
+		//for (std::thread& t : threadVec)
+		//{
+		//	t.join();
+		//}
 	}
 
 	depth--;
@@ -172,7 +193,6 @@ void OctTree::CreateChildren()
 				children[i] = new OctTree(octcenter + offset, halfSize, numRows - 1, dynExp); //creates correct offset for different children
 			}
 		}
-	
 		children[i]->parent = this;
 	}
 

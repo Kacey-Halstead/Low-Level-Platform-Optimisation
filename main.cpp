@@ -22,8 +22,8 @@
 using namespace std::chrono;
 
 // this is the number of falling physical items. 
-#define NUMBER_OF_BOXES 500
-#define NUMBER_OF_SPHERES 500
+#define NUMBER_OF_BOXES 4000
+#define NUMBER_OF_SPHERES 4000
 
 // these is where the camera is, where it is looking and the bounds of the continaing box. You shouldn't need to alter these
 
@@ -90,7 +90,7 @@ void initScene(const int& boxCount, const int& sphereCount) { //const refs becau
     float ZExtent = (maxZ - minZ) / 2;
     if (ZExtent > biggestExtent) biggestExtent = ZExtent;
 
-    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT, true);
+    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT, false);
 
 
 }
@@ -239,7 +239,7 @@ void idle() {
     last = steady_clock::now();
     const duration<float> frameTime = last - old;
     float deltaTime = frameTime.count();
-    //std::cout << "FPS: " << (1 / deltaTime) << std::endl;
+    std::cout << "FPS: " << (1 / deltaTime) << std::endl;
 
     updatePhysics(deltaTime);
 
