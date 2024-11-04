@@ -2,13 +2,21 @@
 #include <iostream>
 #include <cmath>
 
-OctTree::OctTree(Vec3 center, float halfSize, int maxRows)
+#define MAX_OBJECTS 50
+
+OctTree::OctTree(Vec3 center, float halfSize, int maxRows, bool dynamicExpansion)
 {
 	octcenter = center;
 	octHalfSize = halfSize;
-	if (maxRows > 1)
+	dynExp = dynamicExpansion;
+	numRows = maxRows;
+
+	if (!dynExp) //down to specific depth
 	{
-		CreateChildren(maxRows-1);
+		if (numRows > 1)
+		{
+			CreateChildren();
+		}
 	}
 }
 
@@ -21,14 +29,38 @@ void OctTree::InsertObject(ColliderObject* obj)
 {
 	int index = GetIndex(obj); //gets index of child its in
 
-	if (index == 8 || children[index] == nullptr)
+	if (dynExp) //if dynamic expansion
 	{
-		obj->next = start;
-		start = obj;
+		if (children[0] == nullptr) //is leaf
+		{
+			if (GetNumObjects() < MAX_OBJECTS)
+			{
+				obj->next = start;
+				start = obj;
+				return;
+			}
+			else //if exceeds maxobj count, create children and insert
+			{
+				CreateChildren();
+			}
+		}
+
+		for (OctTree* oct : children)
+		{
+			oct->InsertObject(obj);
+		}
 	}
 	else
 	{
-		children[index]->InsertObject(obj);
+		if (index == 8 || children[index] == nullptr) //if straddling or child does not exist
+		{
+			obj->next = start;
+			start = obj;
+		}
+		else //is child exists and obj is valid
+		{
+			children[index]->InsertObject(obj);
+		}
 	}
 }
 
@@ -80,6 +112,8 @@ void OctTree::ResolveCollisions()
 		}
 	}
 
+	//thread for every sub region - 1 thread per child
+
 	if (children[0] != nullptr) //if has child, recurse 
 	{
 		for (int i = 0; i < 8; i++)
@@ -91,7 +125,7 @@ void OctTree::ResolveCollisions()
 	depth--;
 }
 
-void OctTree::CreateChildren(int maxRows)
+void OctTree::CreateChildren()
 {
 	float halfSize = octHalfSize / 2;
 
@@ -110,7 +144,19 @@ void OctTree::CreateChildren(int maxRows)
 		{
 			offset.z = halfSize;
 		}
-		children[i] = new OctTree(octcenter + offset, halfSize, maxRows); //creates correct offset for different children
+
+		if (dynExp) //is dynamic expansion
+		{
+			children[i] = new OctTree(octcenter + offset, halfSize, numRows, dynExp);
+		}
+		else
+		{
+			if (numRows > 1)
+			{
+				children[i] = new OctTree(octcenter + offset, halfSize, numRows - 1, dynExp); //creates correct offset for different children
+			}
+		}
+	
 		children[i]->parent = this;
 	}
 
@@ -155,4 +201,18 @@ int OctTree::GetIndex(ColliderObject* obj)
 
 
 	return index;
+}
+
+int OctTree::GetNumObjects()
+{
+	int counter = 0;
+	ColliderObject* obj = start;
+
+	while (obj != nullptr)
+	{
+		counter++;
+		obj = obj->next;
+	}
+
+	return counter;
 }

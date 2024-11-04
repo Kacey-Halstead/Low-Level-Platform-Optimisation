@@ -90,7 +90,7 @@ void initScene(const int& boxCount, const int& sphereCount) { //const refs becau
     float ZExtent = (maxZ - minZ) / 2;
     if (ZExtent > biggestExtent) biggestExtent = ZExtent;
 
-    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT);
+    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT, false);
 
 
 }
