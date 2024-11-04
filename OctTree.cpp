@@ -4,8 +4,19 @@
 
 #define MAX_OBJECTS 50
 
+namespace OctreeManager
+{
+	int octTreeCount = 0;
+
+	int GetCounter()
+	{
+		return octTreeCount;
+	}
+};
+
 OctTree::OctTree(Vec3 center, float halfSize, int maxRows, bool dynamicExpansion)
 {
+	OctreeManager::octTreeCount++;
 	octcenter = center;
 	octHalfSize = halfSize;
 	dynExp = dynamicExpansion;
@@ -45,9 +56,14 @@ void OctTree::InsertObject(ColliderObject* obj)
 			}
 		}
 
-		for (OctTree* oct : children)
+		if (index == 8)
 		{
-			oct->InsertObject(obj);
+			obj->next = start;
+			start = obj;
+		}
+		else
+		{ 
+			children[index]->InsertObject(obj);
 		}
 	}
 	else

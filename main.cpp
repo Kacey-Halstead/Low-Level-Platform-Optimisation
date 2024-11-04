@@ -90,7 +90,7 @@ void initScene(const int& boxCount, const int& sphereCount) { //const refs becau
     float ZExtent = (maxZ - minZ) / 2;
     if (ZExtent > biggestExtent) biggestExtent = ZExtent;
 
-    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT, false);
+    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT, true);
 
 
 }
@@ -159,6 +159,8 @@ void updatePhysics(const float deltaTime) {
     }
 
     root->ResolveCollisions();
+
+    std::cout << "OctTree count: " << OctreeManager::GetCounter() << std::endl;
 
     // todo for the assessment - use a thread for each sub region
     // for example, assuming we have two regions:
@@ -237,7 +239,7 @@ void idle() {
     last = steady_clock::now();
     const duration<float> frameTime = last - old;
     float deltaTime = frameTime.count();
-    std::cout << "FPS: " << (1 / deltaTime) << std::endl;
+    //std::cout << "FPS: " << (1 / deltaTime) << std::endl;
 
     updatePhysics(deltaTime);
 

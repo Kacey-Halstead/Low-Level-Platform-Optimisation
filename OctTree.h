@@ -5,6 +5,11 @@
 #include <thread>
 #include "ColliderObject.h"
 
+namespace OctreeManager
+{
+	int GetCounter();
+};
+
 class OctTree
 {
 public:
