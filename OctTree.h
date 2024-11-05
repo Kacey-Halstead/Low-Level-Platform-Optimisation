@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include "ColliderObject.h"
+#include <mutex>
 
 namespace OctreeManager
 {
@@ -30,7 +31,9 @@ private:
 	void CreateChildren();
 	int GetIndex(ColliderObject* obj);
 	int GetNumObjects();
+	void ResolveCollisionLock(OctTree* other);
 
+	std::mutex octMutex;
 	int objectCounter = 0;
 	int numRows = 0;
 	bool dynExp = false;

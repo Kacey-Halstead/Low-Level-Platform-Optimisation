@@ -104,60 +104,61 @@ void OctTree::ClearObjects()
 	}
 }
 
+void OctTree::ResolveCollisionLock(OctTree* other)
+{
+	other->octMutex.lock();
+	ColliderObject* curr = other->start; //start of ancestor stack
+	while (curr != nullptr)
+	{
+		//check against others in ancestor stack
+		ColliderObject* nextObj = start;
+		while (nextObj != nullptr)
+		{
+			if (nextObj != curr)
+			{
+				curr->TestCollision(nextObj);
+			}
+
+			nextObj = nextObj->next;
+		}
+		curr = curr->next;
+	}
+	other->octMutex.unlock();
+}
+
 void OctTree::ResolveCollisions()
 {
-	const int MAXDEPTH = 5;
+	const int MAXDEPTH = 100;
+
 	static OctTree* ancestorStack[MAXDEPTH];
 	static int depth = 0;
 
 	ancestorStack[depth++] = this;
 
-	//must check against others in linked list and ancestor stack
-
 	for (int i = 0; i < depth; i++) //for everything in ancestor stack
 	{
-		ColliderObject* curr = ancestorStack[i]->start; //start of ancestor stack
-
-		while (curr != nullptr)
-		{
-			//check against others in ancestor stack
-			ColliderObject* nextObj = start;
-			while (nextObj != nullptr)
-			{
-				if (nextObj != curr)
-				{
-					curr->TestCollision(nextObj);
-				}
-
-				nextObj = nextObj->next;
-			}
-
-			curr = curr->next;
-		}
+		OctTree* other = ancestorStack[i];
+		threads.emplace_back([this, other] {
+			ResolveCollisionLock(other);
+			});
 	}
-
-	//auto threadVec = std::vector<std::thread>{};
 
 	if (children[0] != nullptr) //if has child, recurse 
 	{
 		for (int i = 0; i < 8; i++)
 		{
 			children[i]->ResolveCollisions();
-			//std::thread myThread(ResolveCollisions);
-			//std::thread myThread(ResolveCollisions);
-			//std::thread thread2(ResolveCollisions);
-
-			//threadVec.emplace_back(thread2);
-
-			//threadVec.emplace_back([&] {
-				//children[i]->ResolveCollisions(); });
 		}
-
-		//for (std::thread& t : threadVec)
-		//{
-		//	t.join();
-		//}
 	}
+
+	for (std::thread& t : threads)
+	{
+		if (t.joinable())
+		{
+			t.join();
+		}
+	}
+	threads.clear();
 
 	depth--;
 }

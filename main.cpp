@@ -22,8 +22,8 @@
 using namespace std::chrono;
 
 // this is the number of falling physical items. 
-#define NUMBER_OF_BOXES 4000
-#define NUMBER_OF_SPHERES 4000
+#define NUMBER_OF_BOXES 2000
+#define NUMBER_OF_SPHERES 2000
 
 // these is where the camera is, where it is looking and the bounds of the continaing box. You shouldn't need to alter these
 
