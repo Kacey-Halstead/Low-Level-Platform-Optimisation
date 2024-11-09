@@ -1,10 +1,8 @@
 #pragma once
-#include "Vec3.h"
-#include <vector>
 #include <array>
-#include <thread>
 #include "ColliderObject.h"
 #include <mutex>
+
 
 namespace OctreeManager
 {
@@ -34,6 +32,8 @@ private:
 	void ResolveCollisionLock(OctTree* other);
 
 	std::mutex octMutex;
+	std::condition_variable condVar;
+	std::mutex octMutexResolveColls;
 	int objectCounter = 0;
 	int numRows = 0;
 	bool dynExp = false;

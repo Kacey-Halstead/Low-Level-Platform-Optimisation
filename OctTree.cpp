@@ -1,6 +1,7 @@
 #include "OctTree.h"
 #include <iostream>
 #include <cmath>
+#include "ThreadManager.h"
 
 #define MAX_OBJECTS 50
 
@@ -16,6 +17,7 @@ namespace OctreeManager
 
 OctTree::OctTree(Vec3 center, float halfSize, int maxRows, bool dynamicExpansion)
 {
+	ManageThreads::Init(10);
 	OctreeManager::octTreeCount++;
 	octcenter = center;
 	octHalfSize = halfSize;
@@ -33,7 +35,7 @@ OctTree::OctTree(Vec3 center, float halfSize, int maxRows, bool dynamicExpansion
 
 OctTree::~OctTree()
 {
-
+	ManageThreads::Destroy();
 }
 
 void OctTree::InsertObject(ColliderObject* obj)
@@ -138,9 +140,9 @@ void OctTree::ResolveCollisions()
 	for (int i = 0; i < depth; i++) //for everything in ancestor stack
 	{
 		OctTree* other = ancestorStack[i];
-		threads.emplace_back([this, other] {
+		ManageThreads::Enqueue([this, other] {
 			ResolveCollisionLock(other);
-			});
+		});
 	}
 
 	if (children[0] != nullptr) //if has child, recurse 
@@ -150,15 +152,6 @@ void OctTree::ResolveCollisions()
 			children[i]->ResolveCollisions();
 		}
 	}
-
-	for (std::thread& t : threads)
-	{
-		if (t.joinable())
-		{
-			t.join();
-		}
-	}
-	threads.clear();
 
 	depth--;
 }

@@ -180,7 +180,6 @@
     <ClCompile Include="OctTree.cpp" />
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="StaticClass.cpp" />
-    <ClCompile Include="ThreadManager.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Tracker.cpp" />
     <ClCompile Include="Vec3.cpp" />
