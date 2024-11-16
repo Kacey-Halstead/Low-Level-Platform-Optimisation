@@ -13,34 +13,19 @@
 #include "Sphere.h"
 #include "MemoryAllocation.h"
 #include "MemoryPool.h"
-#include "StaticClass.h"
 #include "Tracker.h"
 #include "Timer.h"
 #include "OctTree.h"
+#include "ThreadManager.h"
 
 using namespace std::chrono;
 
-// this is the number of falling physical items. 
-#define NUMBER_OF_BOXES 1000
-#define NUMBER_OF_SPHERES 1000
-
-// these is where the camera is, where it is looking and the bounds of the continaing box. You shouldn't need to alter these
-
-#define LOOKAT_X 10
-#define LOOKAT_Y 10
-#define LOOKAT_Z 50
-
-#define LOOKDIR_X 10
-#define LOOKDIR_Y 0
-#define LOOKDIR_Z 0
-
-//OcTree divisions
-#define OCTREE_ROW_COUNT 2
-
 std::vector<ColliderObject*> colliders;
-OctTree* root;
+static OctTree* root;
+static InitValues vals{};
+static FPSTimer fpsTimer;
 
-float GenerateRandom(float toDivide)
+inline float GenerateRandom(float toDivide)
 {
     return (static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / toDivide)));
 }
@@ -61,25 +46,26 @@ inline ColliderObject* CreateObj(bool isBox)
     // Assign random x, y, and z positions within specified ranges
     object->position = { GenerateRandom(20), 10.0f + GenerateRandom(1), GenerateRandom(20) };
 
-    object->size = { 1.0f, 1.0f, 1.0f };
+    float sizeOfObj = 1.0f + GenerateRandom(1.5);
+    object->size = { sizeOfObj, sizeOfObj, sizeOfObj };
 
     // Assign random x-velocity between -1.0f and 1.0f
     object->velocity = { -1 + GenerateRandom(2), 0.0f, 0.0f };
 
     // Assign a random colour to the object
-    object->colour = { GenerateRandom(1), GenerateRandom(1), GenerateRandom(1) };
+
+    object->colour = { ((float)rand() / (RAND_MAX)) + 1, ((float)rand() / (RAND_MAX)) + 1, ((float)rand() / (RAND_MAX)) + 1 };
     return object;
 }
 
 
 void initScene(const int& boxCount, const int& sphereCount) { //const refs because values do not need to be changed 
 
-
-    for (int i = boxCount; i > 0; i--) { //faster to check if = 0, quicker than i < boxCount
+    for (unsigned int i = boxCount; i > 0 ; i--) { //faster to check if = 0, quicker than i < boxCount
         colliders.emplace_back(CreateObj(true));
     }
 
-    for (int i = sphereCount; i > 0; i--) {
+    for (unsigned int i = sphereCount; i > 0 ; i--) {
         colliders.emplace_back(CreateObj(false));
     }
 
@@ -89,9 +75,14 @@ void initScene(const int& boxCount, const int& sphereCount) { //const refs becau
     float ZExtent = (maxZ - minZ) / 2;
     if (ZExtent > biggestExtent) biggestExtent = ZExtent;
 
-    root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, OCTREE_ROW_COUNT, false);
-
-
+    if (vals.dynamicOctree)
+    {
+        root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, vals.dynamicOctree, vals.numThreads);
+    }
+    else
+    {
+        root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, vals.octreeSize, vals.numThreads);
+    }
 }
 
 // a ray which is used to tap (by default, remove) a box - see the 'mouse' function for how this is used.
@@ -159,14 +150,8 @@ void updatePhysics(const float deltaTime) {
 
     root->ResolveCollisions();
 
-    std::cout << "OctTree count: " << OctreeManager::GetCounter() << std::endl;
-
-    // todo for the assessment - use a thread for each sub region
-    // for example, assuming we have two regions:
-    // from 'colliders' create two separate lists
-    // empty each list (from previous frame) and work out which collidable object is in which region, 
-    //  and add the pointer to that region's list.
-    // Then, run two threads with the code below (changing 'colliders' to be the region's list)
+    //wait for other threads to finish movings pos of objs so can render in correct place 
+    ManageThreads::WaitForThreadsNotBusy();
 }
 
 // draw the sides of the containing area
@@ -184,11 +169,11 @@ void drawQuad(const Vec3& v1, const Vec3& v2, const Vec3& v3, const Vec3& v4) {
 void drawScene() {
 
     // Draw the side wall
-    GLfloat diffuseMaterial[] = {0.2f, 0.2f, 0.2f, 1.0f};
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMaterial);
+    GLfloat diffuseMaterial[] = {0.5f, 0.5f, 0.5f, 1.0f};
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, diffuseMaterial);
 
     // Draw the left side wall
-    glColor3f(0.5f, 0.5f, 0.5f); // Set the wall color
+    glColor3f(0.9f, 0.9f, 0.9f); // Set the wall color
     Vec3 leftSideWallV1(minX, 0.0f, maxZ);
     Vec3 leftSideWallV2(minX, 50.0f, maxZ);
     Vec3 leftSideWallV3(minX, 50.0f, minZ);
@@ -196,7 +181,7 @@ void drawScene() {
     drawQuad(leftSideWallV1, leftSideWallV2, leftSideWallV3, leftSideWallV4);
 
     // Draw the right side wall
-    glColor3f(0.5f, 0.5f, 0.5f); // Set the wall color
+    glColor3f(-0.5f, -0.5f, -0.5f); // Set the wall color
     Vec3 rightSideWallV1(maxX, 0.0f, maxZ);
     Vec3 rightSideWallV2(maxX, 50.0f, maxZ);
     Vec3 rightSideWallV3(maxX, 50.0f, minZ);
@@ -205,7 +190,7 @@ void drawScene() {
 
 
     // Draw the back wall
-    glColor3f(0.5f, 0.5f, 0.5f); // Set the wall color
+    glColor3f(0.1f, 0.1f, 0.1f); // Set the wall color
     Vec3 backWallV1(minX, 0.0f, minZ);
     Vec3 backWallV2(minX, 50.0f, minZ);
     Vec3 backWallV3(maxX, 50.0f, minZ);
@@ -238,7 +223,13 @@ void idle() {
     last = steady_clock::now();
     const duration<float> frameTime = last - old;
     float deltaTime = frameTime.count();
-    std::cout << "FPS: " << (1 / deltaTime) << std::endl;
+
+    if (fpsTimer.curFrameCounter >= 30)
+    {
+        fpsTimer.curFrameCounter = 0;
+    }
+
+    fpsTimer.FPSTimes[fpsTimer.curFrameCounter++] = (1/deltaTime);
 
     updatePhysics(deltaTime);
 
@@ -264,39 +255,41 @@ void mouse(int button, int state, int x, int y) {
         bool clickedBoxOK = false;
         float minIntersectionDistance = std::numeric_limits<float>::max();
 
-        ColliderObject* clickedBox = nullptr;
-        for (ColliderObject* box : colliders) {
-            if (rayBoxIntersection(cameraPosition, rayDirection, box)) {
+        int indexOfClicked = 0;
+        for (int i = 0; i < colliders.size(); i++) {
+            if (rayBoxIntersection(cameraPosition, rayDirection, colliders[i])) {
                 // Calculate the distance between the camera and the intersected box
-                Vec3 diff = box->position - cameraPosition;
+                Vec3 diff = colliders[i]->position - cameraPosition;
                 float distance = diff.length();
 
                 // Update the clicked box index if this box is closer to the camera
                 if (distance < minIntersectionDistance) {
                     clickedBoxOK = true;
                     minIntersectionDistance = distance;
-                    clickedBox = box;
+                    indexOfClicked = i;
+                    break;
                 }
             }
         }
 
         // Remove the clicked box if any
-        if (clickedBoxOK != false) {
-            //colliders.erase(clickedBox);
+        if (clickedBoxOK) {
+            int end = indexOfClicked + 1;
+            if (indexOfClicked == colliders.size()) end -= 1;
+            colliders.erase(colliders.begin() + indexOfClicked, colliders.begin() + end);
         }
     }
 }
 
 // called when the keyboard is used
 void keyboard(unsigned char key, int x, int y) {
-    const float impulseMagnitude = 20.0f; // Upward impulse magnitude  
-    int* memory = nullptr;
+    static int* mem = nullptr;
 
     switch (key)
     {
     case ' ': //space bar
         for (ColliderObject* box : colliders) {
-            box->velocity.y += impulseMagnitude;
+            box->velocity.y += (rand() % 30 + 1);
         }
         break;
 
@@ -325,23 +318,23 @@ void keyboard(unsigned char key, int x, int y) {
     case 'r': //remove box
     {
         if (colliders.size() <= 0 || !colliders.front()->isBox) break;
-        Box* box = (Box*)colliders.front();
+        ColliderObject* box = colliders.front();
         delete box;
-        //colliders.pop_front();
+        colliders.erase(colliders.begin(), colliders.begin() + 1);
         std::cout << "\nRemoved box" << std::endl;
     }
         break;
 
     case 'a': //add box
     {
-        //colliders.emplace_front(CreateObj(true));
+        colliders.insert(colliders.begin(), CreateObj(true));
         std::cout << "\nAdded box" << std::endl;
     }
         break;
 
     case 'A': //add sphere
     {
-        colliders.emplace_back(CreateObj(false));
+        colliders.insert(colliders.end(), CreateObj(false));
         std::cout << "\nAdded sphere" << std::endl;
     }
         break;
@@ -349,9 +342,9 @@ void keyboard(unsigned char key, int x, int y) {
     case 'R': //remove sphere
     {
         if (colliders.size() <= 0 || colliders.back()->isBox) break;
-        Sphere* sphere = (Sphere*)colliders.back();
+        ColliderObject* sphere = colliders.back();
         delete sphere;
-        colliders.pop_back();
+        colliders.erase(colliders.end() - 1, colliders.end());
         std::cout << "\nRemoved sphere" << std::endl;
     }
         break;
@@ -362,22 +355,80 @@ void keyboard(unsigned char key, int x, int y) {
         std::cout << "Sphere tracker: " << Tracker::GetTrackedAmount(CUBE) << std::endl;
         std::cout << "Cube tracker: " << Tracker::GetTrackedAmount(SPHERE) << std::endl;
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 3 ; i++)
         {
             MemoryPool* pool = MemoryAlloc::GetPool(i);
             std::cout << "Total memory used in memory pool "<< (i + 1) << "[" << (void*)pool << "]: " << pool->GetMemUsed() << "/" << pool->poolSize << ", number of chunks: " << pool->numberOfChunks << std::endl;
-
         }
+        std::cout << "OctTree count: " << OctreeManager::GetCounter() << std::endl;
     }
         break;
 
     case 't': //allocate memory
-
+        if (mem != nullptr) return;
+        mem = new int[5];
         break;
 
     case 'u': //deallocate memory
-
+        if (mem == nullptr) return;
+        delete[] mem;
+        mem = nullptr;
         break;
+    case 'F': //displays average FPS over last 30 frames
+    {
+        float counter = 0;
+        for (float f : fpsTimer.FPSTimes)
+        {
+            counter += f;
+        }
+        std::cout << "\nAverage FPS over the last 30 frames: " << (counter / 30) << std::endl;
+    }
+    }
+}
+
+void HandleInputs()
+{
+    std::string input;
+    std::cout << "Dynamic Octree? (Y/N): ";
+    std::cin >> input;
+    transform(input.begin(), input.end(), input.begin(), ::toupper);
+
+    //dynamic Octree setting
+    input == "Y" ? vals.dynamicOctree = true : vals.dynamicOctree = false; //if yes, dynamic Octree enabled
+
+    int intInput;
+
+    //if no dynamic Octree, init desired size of Octree
+    if (!vals.dynamicOctree)
+    {
+        std::cout << "\nEnter desired Octree depth: ";
+        std::cin >> intInput;
+        vals.octreeSize = intInput;
+    }
+
+    //sphere and cube count
+    std::cout << "\nEnter cube count: ";
+    std::cin >> intInput;
+    vals.cubeCount = intInput;
+
+    std::cout << "\nEnter sphere count: ";
+    std::cin >> intInput;
+    vals.sphereCount = intInput;
+
+    //thread count
+    std::cout << "\nEnter thread count: ";
+    std::cin >> intInput;
+    vals.numThreads = intInput;
+}
+
+void DestroyMem()
+{
+    delete root;
+
+    for (ColliderObject* obj : colliders)
+    {
+        delete obj;
+        obj = nullptr;
     }
 }
 
@@ -401,12 +452,13 @@ int main(int argc, char** argv) {
     gluPerspective(45.0, 800.0 / 600.0, 0.1, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
-    initScene(NUMBER_OF_BOXES, NUMBER_OF_SPHERES);
+    HandleInputs(); //handles user input for obj num and Octree settings
+    initScene(vals.cubeCount, vals.sphereCount);
     glutDisplayFunc(display);
     glutIdleFunc(idle);
 
     // it will stick here until the program ends. 
     glutMainLoop();
-
+    DestroyMem();
     return 0;
 }

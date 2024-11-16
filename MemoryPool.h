@@ -22,6 +22,5 @@ private:
 	void* StartOfPoolPtr;
 	void** freeMemoryArr;
 	int freeBlocks;
-
 };
 

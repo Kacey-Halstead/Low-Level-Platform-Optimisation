@@ -2,22 +2,22 @@
 
 namespace Tracker
 {
-	int DefaulttrackedAmount = 0;
-	int CubetrackedAmount = 0;
-	int SpheretrackedAmount = 0;
+	int DefaultTrackedAmount = 0;
+	int CubeTrackedAmount = 0;
+	int SphereTrackedAmount = 0;
 
 	int GetTrackedAmount(Types type)
 	{
 		switch (type)
 		{
 		case DEFAULT:
-			return DefaulttrackedAmount;
+			return DefaultTrackedAmount;
 			break;
 		case CUBE:
-			return CubetrackedAmount;
+			return CubeTrackedAmount;
 			break;
 		case SPHERE:
-			return SpheretrackedAmount;
+			return SphereTrackedAmount;
 			break;
 		}
 
@@ -47,13 +47,13 @@ namespace Tracker
 		switch (type)
 		{
 		case DEFAULT:
-			DefaulttrackedAmount += numOfBytes;
+			DefaultTrackedAmount += numOfBytes;
 			break;
 		case CUBE:
-			CubetrackedAmount += numOfBytes;
+			CubeTrackedAmount += numOfBytes;
 			break;
 		case SPHERE:
-			SpheretrackedAmount += numOfBytes;
+			SphereTrackedAmount += numOfBytes;
 			break;
 		}
 	}
@@ -63,13 +63,13 @@ namespace Tracker
 		switch (type)
 		{
 		case DEFAULT:
-			DefaulttrackedAmount -= numOfBytes;
+			DefaultTrackedAmount -= numOfBytes;
 			break;
 		case CUBE:
-			CubetrackedAmount -= numOfBytes;
+			CubeTrackedAmount -= numOfBytes;
 			break;
 		case SPHERE:
-			SpheretrackedAmount -= numOfBytes;
+			SphereTrackedAmount -= numOfBytes;
 			break;
 		}
 	}

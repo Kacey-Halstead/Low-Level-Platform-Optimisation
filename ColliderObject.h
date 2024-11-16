@@ -40,8 +40,8 @@ public:
         }
 
         // Compute the collision impulse scalar
-        float e = 0.01f; // Coefficient of restitution (0 = inelastic, 1 = elastic)
-        float dampening = 0.9f; // Dampening factor (0.9 = 10% energy reduction)
+        const float e = 0.01f; // Coefficient of restitution (0 = inelastic, 1 = elastic)
+        const float dampening = 0.9f; // Dampening factor (0.9 = 10% energy reduction)
         float j = -(1.0f + e) * impulse * dampening;
 
         // Apply the impulse to the colliders' velocities
@@ -64,8 +64,8 @@ public:
     void draw() {
         glPushMatrix();
         glTranslatef(position.x, position.y, position.z);
-        GLfloat diffuseMaterial[] = { colour.x, colour.y, colour.z, 1.0f };
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMaterial);
+        GLfloat diffuseMaterial[] = { colour.x - 0.5f, colour.y - 0.5f, colour.z - 0.5f, 1.0f };
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, diffuseMaterial);
         glScalef(size.x, size.y, size.z);
         glRotatef(-90, 1, 0, 0);
         drawMesh();

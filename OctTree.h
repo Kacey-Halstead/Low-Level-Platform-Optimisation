@@ -3,7 +3,6 @@
 #include "ColliderObject.h"
 #include <mutex>
 
-
 namespace OctreeManager
 {
 	int GetCounter();
@@ -12,32 +11,36 @@ namespace OctreeManager
 class OctTree
 {
 public:
-	OctTree(Vec3 center, float halfSize, int maxRows, bool dynamicExpansion);
+	OctTree(Vec3 center, float halfSize, int maxRows, int threadCount);
+	OctTree(Vec3 center, float halfSize, bool dynamicExpansion, int threadCount);
 	~OctTree();
 
 	void InsertObject(ColliderObject* obj);
 	void ClearObjects();
 	void ResolveCollisions();
 
-	ColliderObject* start = nullptr;
-	OctTree* parent = nullptr;
-	std::array<OctTree*, 8> children;
-	std::vector<std::thread> threads;
-	std::thread thisThread;
-
 private:
 	void CreateChildren();
 	int GetIndex(ColliderObject* obj);
-	int GetNumObjects();
+	inline bool CheckStraddling(float pos, float size, float region);
 	void ResolveCollisionLock(OctTree* other);
 
 	std::mutex octMutex;
-	std::condition_variable condVar;
-	std::mutex octMutexResolveColls;
-	int objectCounter = 0;
-	int numRows = 0;
-	bool dynExp = false;
-	Vec3 octcenter;
-	float octHalfSize;
+	std::condition_variable octreeConditionVar;
+
+	std::array<OctTree*, 8> childrenArr{};
+	std::vector<std::thread> threadVec{};
+	Vec3 regionCentre{};
+
+	int objsInRegion = 0;
+	int octreeDepth = 0;
+	int numThreadCount = 0;
+
+	float octHalfSize = 0;
+
+	bool enableDynamicOctree = false;
+
+	ColliderObject* objLinkedList = nullptr;
+	OctTree* parent = nullptr;
 };
                                                                                                                                                                                                  

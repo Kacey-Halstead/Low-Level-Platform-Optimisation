@@ -8,60 +8,11 @@
 
 namespace ManageThreads
 {
-	std::vector<std::thread> threadVec;
-	std::queue<std::function<void()>> threadTasks;
-	std::mutex threadMutex;
-	std::condition_variable threadCV;
-	bool stop = false;
+	void Destroy();
 
-	void Destroy()
-	{
-		std::unique_lock<std::mutex> lock(threadMutex);
-		stop = true;
-		threadCV.notify_all();
-		for (auto& thread : threadVec)
-		{
-			thread.join();
-		}
-	}
+	void Enqueue(std::function<void()> task);
 
-	void Enqueue(std::function<void()> task)
-	{
-		{
-			std::unique_lock<std::mutex> lock(threadMutex);
-			threadTasks.emplace(move(task));
-		}
-		threadCV.notify_one();
-	}
+	void WaitForThreadsNotBusy();
 
-	void Init(int numThreads)
-	{
-		if (threadVec.empty())
-		{
-			for (size_t i = 0; i < numThreads; i++)
-			{
-				threadVec.emplace_back([&] {
-					while (true)
-					{
-						std::function<void()> task;
-						{
-							std::unique_lock<std::mutex> lock(threadMutex);
-							threadCV.wait(lock, [&] {
-								return !threadTasks.empty() || stop;
-								});
-
-							if (stop && threadTasks.empty())
-							{
-								return;
-							}
-
-							task = move(threadTasks.front());
-							threadTasks.pop();
-						}
-						task();
-					}
-					});
-			}
-		}
-	}
+	void Init(int numThreads);
 };

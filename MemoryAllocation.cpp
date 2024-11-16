@@ -66,7 +66,7 @@ namespace MemoryAlloc
 
 void* operator new(size_t size)
 {
-	return ::operator new(size, DEFAULT);
+	return ::operator new(size, DEFAULT); //used if no set tracker
 }
 
 MemoryPool* GetPoolSize(size_t size)
@@ -179,7 +179,7 @@ void operator delete (void * pMem)
 	MemoryPool* mPool = MemoryAlloc::GetPool(1);
 	MemoryPool* sPool = MemoryAlloc::GetPool(2);
 
-	if (!bPool->Free(pHeader) && !mPool->Free(pHeader) && !sPool->Free(pHeader)) //if not work
+	if (!bPool->Free(pHeader) && !mPool->Free(pHeader) && !sPool->Free(pHeader)) //free if in pool, else free normally
 	{
 		free(pHeader);
 	}

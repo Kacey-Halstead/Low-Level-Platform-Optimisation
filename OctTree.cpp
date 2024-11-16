@@ -15,53 +15,70 @@ namespace OctreeManager
 	}
 };
 
-OctTree::OctTree(Vec3 center, float halfSize, int maxRows, bool dynamicExpansion)
+OctTree::OctTree(Vec3 center, float halfSize, int maxRows, int threadCount)
 {
-	ManageThreads::Init(10);
+	ManageThreads::Init(threadCount);
 	OctreeManager::octTreeCount++;
-	octcenter = center;
+	regionCentre = center;
 	octHalfSize = halfSize;
-	dynExp = dynamicExpansion;
-	numRows = maxRows;
+	octreeDepth = maxRows;
+	numThreadCount = threadCount;
 
-	if (!dynExp) //down to specific depth
+	if (octreeDepth > 1)
 	{
-		if (numRows > 1)
-		{
-			CreateChildren();
-		}
+		CreateChildren();
 	}
+
+}
+
+OctTree::OctTree(Vec3 center, float halfSize, bool dynamicExpansion, int threadCount)
+{
+	ManageThreads::Init(threadCount);
+	OctreeManager::octTreeCount++;
+	regionCentre = center;
+	octHalfSize = halfSize;
+	enableDynamicOctree = dynamicExpansion;
+	numThreadCount = threadCount;
 }
 
 OctTree::~OctTree()
 {
 	ManageThreads::Destroy();
+
+	for (int i = 0; i < childrenArr.size(); i++)
+	{
+		delete childrenArr[i];
+		childrenArr[i] = nullptr;
+	}
+
+	parent = nullptr;
+	objLinkedList = nullptr;
 }
 
 void OctTree::InsertObject(ColliderObject* obj)
 {
 	int index = GetIndex(obj); //gets index of child its in
 
-	if (dynExp) //if dynamic expansion
+	if (enableDynamicOctree) //if dynamic expansion
 	{
-		if (children[0] == nullptr) //is leaf
+		if (childrenArr[0] == nullptr) //is leaf
 		{
-			if (objectCounter < MAX_OBJECTS)
+			if (objsInRegion < MAX_OBJECTS)
 			{
 				if (index != 8)
 				{
-					objectCounter++;
+					objsInRegion++;
 				}
 
-				obj->next = start;
-				start = obj;
+				obj->next = objLinkedList;
+				objLinkedList = obj;
 				return;
 			}
 			else //if exceeds maxobj count, create children and insert
 			{
 				CreateChildren();
-				ColliderObject* object = start;
-				start = nullptr;
+				ColliderObject* object = objLinkedList;
+				objLinkedList = nullptr;
 				while (object != nullptr)
 				{
 					InsertObject(object);
@@ -72,48 +89,50 @@ void OctTree::InsertObject(ColliderObject* obj)
 
 		if (index == 8)
 		{
-			obj->next = start;
-			start = obj;
+			obj->next = objLinkedList;
+			objLinkedList = obj;
 		}
 		else
 		{ 
-			children[index]->InsertObject(obj);
+			childrenArr[index]->InsertObject(obj);
 		}
 	}
 	else
 	{
-		if (index == 8 || children[index] == nullptr) //if straddling or child does not exist
+		if (index == 8 || childrenArr[index] == nullptr) //if straddling or child does not exist
 		{
-			obj->next = start;
-			start = obj;
+			obj->next = objLinkedList;
+			objLinkedList = obj;
 		}
 		else //is child exists and obj is valid
 		{
-			children[index]->InsertObject(obj);
+			childrenArr[index]->InsertObject(obj);
 		}
 	}
 }
 
 void OctTree::ClearObjects()
 {
-	start = nullptr;
+	objLinkedList = nullptr;
 
-	if (children[0] == nullptr) return;
+	if (childrenArr[0] == nullptr) return;
 
 	for (int i = 0; i < 8; i++)
 	{
-		children[i]->ClearObjects();
+		childrenArr[i]->ClearObjects();
 	}
+
+	objsInRegion = 0;
 }
 
 void OctTree::ResolveCollisionLock(OctTree* other)
 {
 	other->octMutex.lock();
-	ColliderObject* curr = other->start; //start of ancestor stack
+	ColliderObject* curr = other->objLinkedList; //start of ancestor stack
 	while (curr != nullptr)
 	{
 		//check against others in ancestor stack
-		ColliderObject* nextObj = start;
+		ColliderObject* nextObj = objLinkedList;
 		while (nextObj != nullptr)
 		{
 			if (nextObj != curr)
@@ -145,11 +164,11 @@ void OctTree::ResolveCollisions()
 		});
 	}
 
-	if (children[0] != nullptr) //if has child, recurse 
+	if (childrenArr[0] != nullptr) //if has child, recurse 
 	{
 		for (int i = 0; i < 8; i++)
 		{
-			children[i]->ResolveCollisions();
+			childrenArr[i]->ResolveCollisions();
 		}
 	}
 
@@ -158,91 +177,78 @@ void OctTree::ResolveCollisions()
 
 void OctTree::CreateChildren()
 {
-	float halfSize = octHalfSize / 2;
+	float childHalfSize = octHalfSize / 2;
 
 	for (int i = 0; i < 8; i++) //creates all 8 children
 	{
-		Vec3 offset = Vec3(-halfSize, -halfSize, -halfSize);
+		Vec3 offset = Vec3(-childHalfSize, -childHalfSize, -childHalfSize);
 		if (i % 2 != 0) // if even, its + halfsize, else - halfsize
 		{
-			offset.x = halfSize;
+			offset.x = childHalfSize;
 		}
 		if (i == 2 || i == 3 || i == 6 || i == 7) //if these values, + y
 		{
-			offset.y = halfSize;
+			offset.y = childHalfSize;
 		}
 		if (i > 3) //if above 3, + halfsize on z
 		{
-			offset.z = halfSize;
+			offset.z = childHalfSize;
 		}
 
-		if (dynExp) //is dynamic expansion
+		if (enableDynamicOctree) //if dynamic expansion
 		{
-			children[i] = new OctTree(octcenter + offset, halfSize, numRows, dynExp);
+			childrenArr[i] = new OctTree(regionCentre + offset, childHalfSize, enableDynamicOctree, numThreadCount);
 		}
 		else
 		{
-			if (numRows > 1)
+			if (octreeDepth > 1)
 			{
-				children[i] = new OctTree(octcenter + offset, halfSize, numRows - 1, dynExp); //creates correct offset for different children
+				childrenArr[i] = new OctTree(regionCentre + offset, childHalfSize, octreeDepth - 1, numThreadCount); //creates correct offset for different children
 			}
 		}
-		children[i]->parent = this;
+		childrenArr[i]->parent = this;
 	}
 
-	//children[0] = back left (bottom)
-	//children[1] = back right (bottom)
-	//children[2] = front left (bottom)
-	//children[3] = front right (bottom)
-	//children[4] = back left (top)
-	//children[5] = back right (top)
-	//children[6] = front left (top)
-	//children[7] = front right (top)
+	/* positions of regions
+	children[0] = back left (bottom)
+	children[1] = back right (bottom)
+	children[2] = front left (bottom)
+	children[3] = front right (bottom)
+	children[4] = back left (top)
+	children[5] = back right (top)
+	children[6] = front left (top)
+	children[7] = front right (top)
+	*/
 }
 
 int OctTree::GetIndex(ColliderObject* obj)
 {
 	int index = 0; //adds 1, 2, or 4 depending if  > or < than centre
 
-	if (obj->position.x + obj->size.x > octcenter.x && obj->position.x - obj->size.x < octcenter.x) //check for straddling
-	{
-		return 8;
-	}
+	if (CheckStraddling(obj->position.x, obj->size.x, regionCentre.x) || CheckStraddling(obj->position.z, obj->size.z, regionCentre.z)) return 8;
 
-	if (obj->position.z + obj->size.z > octcenter.z && obj->position.z - obj->size.z < octcenter.z) //check for straddling
-	{
-		return 8;
-	}
-
-
-	if (obj->position.x > octcenter.x)
+	if (obj->position.x > regionCentre.x)
 	{
 		index += 1;
 	}
-	if (obj->position.y > octcenter.y)
+	if (obj->position.y > regionCentre.y)
 	{
 		index += 2;
 	}
-	if (obj->position.z > octcenter.z)
+	if (obj->position.z > regionCentre.z)
 	{
 		index += 4;
 	}
 
-
-
 	return index;
 }
 
-int OctTree::GetNumObjects()
+bool OctTree::CheckStraddling(float pos, float size, float region)
 {
-	int counter = 0;
-	ColliderObject* obj = start;
-
-	while (obj != nullptr)
+	if (pos + size > region && pos - size < region) //check for straddling
 	{
-		counter++;
-		obj = obj->next;
+		return true;
 	}
 
-	return counter;
+	return false;
 }

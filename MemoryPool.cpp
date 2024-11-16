@@ -23,6 +23,7 @@ MemoryPool::MemoryPool(int numChunks, size_t eachChunkSize)
 MemoryPool::~MemoryPool()
 {
 	free(StartOfPoolPtr);
+	free(freeMemoryArr);
 }
 
 void* MemoryPool::Alloc(size_t iSize)
