@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include "ThreadManager.h"
+#include <atomic>
 
 #define MAX_OBJECTS 50
 
@@ -15,36 +16,37 @@ namespace OctreeManager
 	}
 };
 
-OctTree::OctTree(Vec3 center, float halfSize, int maxRows, int threadCount)
+OctTree::OctTree(Vec3 center, float halfSize, int maxRows)
 {
-	ManageThreads::Init(threadCount);
 	OctreeManager::octTreeCount++;
 	regionCentre = center;
 	octHalfSize = halfSize;
 	octreeDepth = maxRows;
-	numThreadCount = threadCount;
 
 	if (octreeDepth > 1)
 	{
 		CreateChildren();
 	}
+	else
+	{
+		for (int i = 0; i < childrenArr.size(); i++)
+		{
+			childrenArr[i] = nullptr;
+		}
+	}
 
 }
 
-OctTree::OctTree(Vec3 center, float halfSize, bool dynamicExpansion, int threadCount)
+OctTree::OctTree(Vec3 center, float halfSize, bool dynamicExpansion)
 {
-	ManageThreads::Init(threadCount);
 	OctreeManager::octTreeCount++;
 	regionCentre = center;
 	octHalfSize = halfSize;
 	enableDynamicOctree = dynamicExpansion;
-	numThreadCount = threadCount;
 }
 
 OctTree::~OctTree()
 {
-	ManageThreads::Destroy();
-
 	for (int i = 0; i < childrenArr.size(); i++)
 	{
 		delete childrenArr[i];
@@ -127,7 +129,8 @@ void OctTree::ClearObjects()
 
 void OctTree::ResolveCollisionLock(OctTree* other)
 {
-	other->octMutex.lock();
+	std::unique_lock<std::mutex> lock(other->octMutex);
+
 	ColliderObject* curr = other->objLinkedList; //start of ancestor stack
 	while (curr != nullptr)
 	{
@@ -144,7 +147,6 @@ void OctTree::ResolveCollisionLock(OctTree* other)
 		}
 		curr = curr->next;
 	}
-	other->octMutex.unlock();
 }
 
 void OctTree::ResolveCollisions()
@@ -197,14 +199,11 @@ void OctTree::CreateChildren()
 
 		if (enableDynamicOctree) //if dynamic expansion
 		{
-			childrenArr[i] = new OctTree(regionCentre + offset, childHalfSize, enableDynamicOctree, numThreadCount);
+			childrenArr[i] = new OctTree(regionCentre + offset, childHalfSize, enableDynamicOctree);
 		}
 		else
 		{
-			if (octreeDepth > 1)
-			{
-				childrenArr[i] = new OctTree(regionCentre + offset, childHalfSize, octreeDepth - 1, numThreadCount); //creates correct offset for different children
-			}
+			childrenArr[i] = new OctTree(regionCentre + offset, childHalfSize, octreeDepth - 1); //creates correct offset for different children
 		}
 		childrenArr[i]->parent = this;
 	}

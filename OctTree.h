@@ -6,13 +6,13 @@
 namespace OctreeManager
 {
 	int GetCounter();
-};
+}
 
 class OctTree
 {
 public:
-	OctTree(Vec3 center, float halfSize, int maxRows, int threadCount);
-	OctTree(Vec3 center, float halfSize, bool dynamicExpansion, int threadCount);
+	OctTree(Vec3 center, float halfSize, int maxRows);
+	OctTree(Vec3 center, float halfSize, bool dynamicExpansion);
 	~OctTree();
 
 	void InsertObject(ColliderObject* obj);
@@ -26,10 +26,8 @@ private:
 	void ResolveCollisionLock(OctTree* other);
 
 	std::mutex octMutex;
-	std::condition_variable octreeConditionVar;
 
-	std::array<OctTree*, 8> childrenArr{};
-	std::vector<std::thread> threadVec{};
+	std::array<OctTree*, 8> childrenArr;
 	Vec3 regionCentre{};
 
 	int objsInRegion = 0;

@@ -77,11 +77,11 @@ void initScene(const int& boxCount, const int& sphereCount) { //const refs becau
 
     if (vals.dynamicOctree)
     {
-        root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, vals.dynamicOctree, vals.numThreads);
+        root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, vals.dynamicOctree);
     }
     else
     {
-        root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, vals.octreeSize, vals.numThreads);
+        root = new OctTree(Vec3(minX + XExtent, biggestExtent, minZ + ZExtent), biggestExtent, vals.octreeSize);
     }
 }
 
@@ -276,7 +276,10 @@ void mouse(int button, int state, int x, int y) {
         if (clickedBoxOK) {
             int end = indexOfClicked + 1;
             if (indexOfClicked == colliders.size()) end -= 1;
-            colliders.erase(colliders.begin() + indexOfClicked, colliders.begin() + end);
+            ColliderObject* obj = colliders[indexOfClicked];
+            delete obj;
+            obj = nullptr;
+            colliders.erase(colliders.begin() + indexOfClicked, colliders.begin() + end); 
         }
     }
 }
@@ -374,14 +377,19 @@ void keyboard(unsigned char key, int x, int y) {
         delete[] mem;
         mem = nullptr;
         break;
-    case 'F': //displays average FPS over last 30 frames
+    case 'p': //displays average FPS over last 30 frames
     {
-        float counter = 0;
+        float sum = 0;
+        int count = 0;
         for (float f : fpsTimer.FPSTimes)
         {
-            counter += f;
+            if (f == 0.0f)
+                break;
+            
+            sum += f;
+            ++count;
         }
-        std::cout << "\nAverage FPS over the last 30 frames: " << (counter / 30) << std::endl;
+        std::cout << "\nAverage FPS over the last 30 frames: " << (sum / count) << std::endl;
     }
     }
 }
@@ -416,9 +424,17 @@ void HandleInputs()
     vals.sphereCount = intInput;
 
     //thread count
-    std::cout << "\nEnter thread count: ";
+    std::cout << "\nEnter thread count (set to -1 for optimal amount): ";
     std::cin >> intInput;
-    vals.numThreads = intInput;
+    if (intInput == -1) //set to optimal amount
+    {
+        vals.numThreads = std::thread::hardware_concurrency();
+        std::cout << "\nOptimal threads: " << vals.numThreads << std::endl;
+    }
+    else
+    {
+        vals.numThreads = intInput;
+    }   
 }
 
 void DestroyMem()
@@ -453,6 +469,7 @@ int main(int argc, char** argv) {
     glMatrixMode(GL_MODELVIEW);
 
     HandleInputs(); //handles user input for obj num and Octree settings
+    ManageThreads::Init(vals.numThreads);
     initScene(vals.cubeCount, vals.sphereCount);
     glutDisplayFunc(display);
     glutIdleFunc(idle);
@@ -460,5 +477,6 @@ int main(int argc, char** argv) {
     // it will stick here until the program ends. 
     glutMainLoop();
     DestroyMem();
+    ManageThreads::Destroy();
     return 0;
 }
