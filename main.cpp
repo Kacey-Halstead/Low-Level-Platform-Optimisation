@@ -451,6 +451,7 @@ void DestroyMem()
 // the main function. 
 int main(int argc, char** argv) {
 
+    HandleInputs(); //handles user input for obj num and Octree settings
     srand(static_cast<unsigned>(time(0))); // Seed random number generator
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -468,7 +469,7 @@ int main(int argc, char** argv) {
     gluPerspective(45.0, 800.0 / 600.0, 0.1, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
-    HandleInputs(); //handles user input for obj num and Octree settings
+
     ManageThreads::Init(vals.numThreads);
     initScene(vals.cubeCount, vals.sphereCount);
     glutDisplayFunc(display);
